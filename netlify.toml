@@ -1,0 +1,7 @@
+[build]
+  publish = "."
+  command = "echo sin compilacion"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
