@@ -1562,10 +1562,12 @@ window.__pdf={vaOf,comparePDF,idleOf,makePDF,describe,stdChartImg,rowsFor,conclu
     for (const x of F) {
       const e = x.e, pr = mlPredict(model, x.f);
       e.mlFrom = e.code;
-      if (pr.p < o.pMin || pr.n < o.nMin || pr.y === 'P0') { st[pr.y === 'P0' ? 'P0' : 'kept']++; e.ml = 'P0'; e.mlP = +pr.p.toFixed(2); if (pr.y !== 'P0') e.probable = true; continue; }
+      if (pr.n < o.nMin || pr.y === 'P0') { st[pr.y === 'P0' ? 'P0' : 'kept']++; e.ml = 'P0'; e.mlP = +pr.p.toFixed(2); if (pr.y !== 'P0') e.probable = true; continue; }
       // respaldo fijo: si suelta y no hay zona de armado cerca (ni presiones ni colocaciones en ±20 s, p. ej. pasar piezas a una charola), sigue siendo P0: todavía hay pocos ejemplos de P0 real para aprenderlo
       if (x.f[4] === 1 && x.f[9] >= 0.99) { st.guard++; e.ml = 'P0'; e.mlP = +pr.p.toFixed(2); continue; }
       e.ml = pr.y; e.mlP = +pr.p.toFixed(2); st[pr.y]++;
+      // v1.6.3: si duda (menos del 60 %), aplica su mejor respuesta y la marca "probable" en lugar de regresar a P0
+      if (pr.p < o.pMin) { e.probable = true; st.unsure = (st.unsure || 0) + 1; }
       if (pr.y === 'P2' || pr.y === 'P5') { e.term = pr.y; e.code = strip(e.code, pr.y); continue; }
       // tomó una pieza: el final del movimiento es un agarre, no una colocación
       if (pr.y === 'G1') { e.term = 'G1'; e.code = strip(e.code, 'G1'); continue; }
@@ -2363,25 +2365,27 @@ function mlSet(y){const it=ML_UI.items[ML_UI.i],s=ML_UI.s;if(!it||!s)return;it.y
   const nx=ML_UI.items.findIndex((x,k)=>k>ML_UI.i&&!x.y);ML_UI.i=nx>=0?nx:Math.min(ML_UI.items.length-1,ML_UI.i+1);mlShow();mlKpis();}
 function mlCounts(r){const c={P0:0,P25:0,X4:0};for(const e of r.elements){const k=e.code||'';if(/P0/.test(k))c.P0++;if(/P[25]/.test(k))c.P25++;if(k==='X4')c.X4++;}return c;}
 function mlKpis(){const lab=mlLabels(),m=mlCur(),nS=new Set(lab.map(x=>x.sid)).size;
-  $('#mlKpis').innerHTML=[[MODAPTS.ML.base.samples.length+' + '+(MLC.on&&MLC.key()?Math.max(MLC.n,lab.filter(x=>x.up).length)+' + '+lab.filter(x=>!x.up).length:lab.length),MLC.on&&MLC.key()?L('ejemplos: base + almacén central + sin subir de este aparato','examples: base + central store + not yet uploaded from this device'):L('ejemplos: base (Haas) + tus etiquetas','examples: base (Haas) + your labels')],[m.cv!=null?Math.round(100*m.cv)+' %':(MODAPTS.ML.base.model.cv!=null?Math.round(100*MODAPTS.ML.base.model.cv)+' %':'—'),L('acierto con sesiones que no vio (validación cruzada)','accuracy on data it did not see (cross-validation)')],['v'+(m.v||1),m.src==='central'?L('versión del modelo central en uso','central model version in use'):L('versión del modelo en uso','model version in use')],[String(MLC.on&&MLC.key()?Math.max(MLC.ns,nS):nS),L('sesiones etiquetadas','labeled sessions')]]
+  const cen=MLC.on&&MLC.key(),nOwn=cen?Math.max(MLC.n,lab.filter(x=>x.up).length)+lab.filter(x=>!x.up).length:lab.length,useBase=nOwn<30;
+  $('#mlKpis').innerHTML=[[useBase?MODAPTS.ML.base.samples.length+' + '+nOwn:String(nOwn),useBase?L('ejemplos: base del Haas + tus etiquetas (la base sale al llegar a 30 tuyas)','examples: Haas base + your labels (the base drops out at 30 of yours)'):(cen?L('ejemplos: solo etiquetas del almacén central (la base del Haas ya no se usa)','examples: central store labels only (the Haas base is no longer used)'):L('ejemplos: solo tus etiquetas (la base del Haas ya no se usa)','examples: your labels only (the Haas base is no longer used)'))],[m.cv!=null?Math.round(100*m.cv)+' %':(MODAPTS.ML.base.model.cv!=null?Math.round(100*MODAPTS.ML.base.model.cv)+' %':'—'),L('acierto con sesiones que no vio (validación cruzada)','accuracy on data it did not see (cross-validation)')],['v'+(m.v||1),m.src==='central'?L('versión del modelo central en uso','central model version in use'):L('versión del modelo en uso','model version in use')],[String(MLC.on&&MLC.key()?Math.max(MLC.ns,nS):nS),L('sesiones etiquetadas','labeled sessions')]]
     .map(([v,t])=>`<div class="kpi"><b>${v}</b><span>${t}</span></div>`).join('');
   const s=ML_UI.s,tb=$('#mlTb');if(!s||!ML_UI.r0){tb.innerHTML='';return;}
   const a=mlCounts(ML_UI.r0),b=ML_UI.r1?mlCounts(ML_UI.r1):null,it=ML_UI.items,ly=y=>it.filter(x=>x.y===y).length,nl=it.filter(x=>x.y).length,ex=nl?`${nl}/${it.length} `+L('revisadas','reviewed'):'—';
   const row=(n,x,y,z)=>`<tr><td>${n}</td><td>${x}</td><td>${y}</td><td>${z}</td></tr>`;
-  tb.innerHTML=row(L('P0 dejar','P0 put aside'),a.P0,b?b.P0:'—',nl?ly('P0'):'—')+row(L('P2/P5 colocar','P2/P5 place'),a.P25,b?b.P25:'—',nl?(ly('P2')+ly('P5')+a.P25):'—')+row(L('Ruido (sin P)','Noise (no P)'),'—',b&&ML_UI.r1.ml?ML_UI.r1.ml.none:'—',nl?ly('none'):'—')+row('X4',a.X4,b?b.X4:'—','—')
+  tb.innerHTML=row(L('P0 dejar','P0 put aside'),a.P0,b?b.P0:'—',nl?ly('P0'):'—')+row(L('P2/P5 colocar','P2/P5 place'),a.P25,b?b.P25:'—',nl?(ly('P2')+ly('P5')+a.P25):'—')+row(L('Ruido (sin P)','Noise (no P)'),'—',b&&ML_UI.r1.ml?ML_UI.r1.ml.none:'—',nl?ly('none'):'—')+row(L('Tomó una pieza (agarre)','Grabbed a part (grasp)'),'—',b&&ML_UI.r1.ml?(ML_UI.r1.ml.G1||0):'—',nl?ly('G1'):'—')+row(L('Apretó (X4)','Pressed (X4)'),a.X4,b?b.X4:'—',nl?ly('X4')+L(' marcadas',' marked'):'—')
     +row(L('Actual MODs','Actual MODs'),fmt(ML_UI.r0.stdTime)+' s',b?fmt(ML_UI.r1.stdTime)+' s':'—',ex);}
+function mlSamples(L){const own=L.map(x=>({f:x.f,y:x.y}));return own.length>=30?own:MODAPTS.ML.base.samples.concat(own);} // v1.6.3: con 30 etiquetas tuyas o más, la base del Haas sale del entrenamiento
 function mlAfterModel(m){const s=ML_UI.s;if(s&&s.raw){ML_UI.r1=freshOf(s);s.result=ML_UI.r1;save();if(cur===s)renderDetail();renderList();}mlPill();mlKpis();if(ML_UI.items.length)mlShow();}
 async function mlTrain(){const btn=$('#mlTrain');btn.disabled=true;try{
   if(MLC.on&&MLC.key()){ // todos los aparatos: subir mis etiquetas, bajar todas, entrenar y subir el modelo como versión nueva
     $('#mlMsg').textContent=L('Subiendo tus etiquetas al almacén central…','Uploading your labels to the central store…');
     const mine=mlLabels(),pend=mine.filter(x=>!x.up);if(pend.length){const r=await MLC.post({action:'labels',labels:pend,dev:MLC.dev()});if(!r.ok)throw new Error(r.error||'labels');mlSaveLabels(mine.map(x=>Object.assign(x,{up:true})));}
-    for(let tryN=0;tryN<2;tryN++){const all=await MLC.get('labels');if(all.error)throw new Error(all.error);const S=MODAPTS.ML.base.samples.concat((all.labels||[]).map(x=>({f:x.f,y:x.y})));
+    for(let tryN=0;tryN<2;tryN++){const all=await MLC.get('labels');if(all.error)throw new Error(all.error);const S=mlSamples(all.labels||[]);
       const m=MODAPTS.mlTrain(S);m.cv=MODAPTS.mlCV(S,5);m.date=new Date().toISOString().slice(0,10);m.src='central';
       const r=await MLC.post({action:'model',model:m,base:MLC.v,dev:MLC.dev()});if(r.status===409){await MLC.refresh();continue;}if(!r.ok)throw new Error(r.error||'model');
       m.v=r.v;MLC.v=r.v;MLC.n=(all.labels||[]).length;MODAPTS.ML.model=m;try{localStorage.setItem(MLK.model,JSON.stringify(m));}catch(e){}mlAfterModel(m);await MLC.refresh(true);
       $('#mlMsg').textContent=L(`Modelo central v${m.v} entrenado con ${m.n} ejemplos de todos los aparatos · acierto ${Math.round(100*(m.cv||0))} %. Todos los aparatos lo bajan al abrir la app.`,`Central model v${m.v} trained with ${m.n} examples from every device · accuracy ${Math.round(100*(m.cv||0))} %. Every device downloads it when the app opens.`);return;}
     throw new Error(L('Otro aparato entrenó al mismo tiempo; vuelve a tocar Entrenar.','Another device trained at the same time; tap Train again.'));}
-  const lab=mlLabels(),S=MODAPTS.ML.base.samples.concat(lab.map(x=>({f:x.f,y:x.y})));
+  const lab=mlLabels(),S=mlSamples(lab);
   const m=MODAPTS.mlTrain(S);m.v=(mlCur().src==='central'?1:(mlCur().v||1))+1;m.date=new Date().toISOString().slice(0,10);m.cv=MODAPTS.mlCV(S,5);MODAPTS.ML.model=m;try{localStorage.setItem(MLK.model,JSON.stringify(m));}catch(e){}mlAfterModel(m);
   $('#mlMsg').textContent=L(`Modelo v${m.v} entrenado con ${m.n} ejemplos · acierto ${Math.round(100*(m.cv||0))} %. Solo en este aparato`+(MLC.on?': pon la clave del almacén para compartirlo.':' (este sitio no tiene almacén central).'),`Model v${m.v} trained with ${m.n} examples · accuracy ${Math.round(100*(m.cv||0))} %. This device only`+(MLC.on?': enter the store key to share it.':' (this site has no central store).'));
 }catch(e){$('#mlMsg').textContent=L('No se pudo entrenar en el almacén central: ','Could not train on the central store: ')+e.message;}finally{btn.disabled=false;}}
