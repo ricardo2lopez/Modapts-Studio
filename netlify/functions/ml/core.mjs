@@ -2,7 +2,7 @@
 // Guarda solo los 14 datos de cada movimiento y la respuesta (nunca video). Escribir pide la clave de la app;
 // borrar o regresar de versión pide la clave de administrador. Cada borrado deja un respaldo.
 const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
-const CLS = ['G1', 'P2', 'P5', 'X4', 'P0', 'none'];
+const CLS = ['G1', 'P2', 'P5', 'X4', 'P0', 'J2', 'C', 'U', 'none', 'hold'];
 const okLabel = x => x && typeof x.sid === 'string' && (x.h === 'L' || x.h === 'R') && isFinite(x.t1) && CLS.includes(x.y) && Array.isArray(x.f) && x.f.length >= 10 && x.f.length <= 40 && x.f.every(Number.isFinite);
 const same = (a, b) => a.sid === b.sid && a.h === b.h && Math.abs(a.t1 - b.t1) < 0.06;
 
