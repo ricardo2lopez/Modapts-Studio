@@ -64,7 +64,7 @@ button.glcode:hover,button.glcode.on{background:var(--panel2)}button.glcode.on{o
 <body>
 <div class="wrap">
 <header>
-  <div><h1><b>MODAPTS</b> Studio</h1><div class="sub" data-t="sub"></div></div>
+  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.6.7</span></h1><div class="sub" data-t="sub"></div></div>
   <div class="row"><button class="sm" id="langBtn" title="Idioma / Language">EN</button><button class="sm" id="theme" data-t="theme"></button></div>
 </header>
 
@@ -2293,7 +2293,7 @@ const MLC={on:false,v:0,n:0,ns:0,versions:[],url:'/api/ml',
     let r;MLC.err='';try{const x=await fetch(MLC.url+'?what=model',{cache:'no-store'});if(!/json/.test(x.headers.get('content-type')||''))throw 0;r=await x.json();if(!x.ok){MLC.err=r.error||String(x.status);throw 0;}}catch(e){MLC.on=false;mlCenUI();return;}
     MLC.on=true;MLC.v=r.v||0;MLC.n=r.n||0;MLC.ns=r.sessions||0;MLC.versions=r.versions||[];
     if(r.model&&r.model.tree){const m=Object.assign(r.model,{src:'central',v:r.v});const cur0=MODAPTS.ML.model;if(!cur0||cur0.src!=='central'||cur0.v!==m.v||(cur0.date!==m.date)){MODAPTS.ML.model=m;try{localStorage.setItem(MLK.model,JSON.stringify(m));}catch(e){}}}
-    mlCenUI();if(!quiet&&$('#mlModelPill'))mlPill();}};
+    mlCenUI();if($('#mlKpis'))mlKpis();if(!quiet&&$('#mlModelPill'))mlPill();}};
 function mlCenUI(){const st=$('#mlCenSt');if(!st)return;
   if(!MLC.on&&MLC.err){st.innerHTML=L('El almacén central existe pero no está listo: ','The central store exists but is not ready: ')+esc(MLC.err)+L('. Revisa las claves en Netlify y vuelve a publicar.','. Check the keys in Netlify and publish again.');$('#mlCenKeyRow').classList.add('hide');$('#mlAdm').classList.add('hide');return;}
   if(!MLC.on){st.innerHTML=L('Sin almacén central: este sitio no tiene la función (hay que publicarlo desde GitHub). Lo que etiquetes y entrenes se queda solo en este aparato; usa Exportar etiquetas para juntarlas.','No central store: this site has no function (it has to be published from GitHub). What you label and train stays on this device only; use Export labels to gather them.');$('#mlCenKeyRow').classList.add('hide');$('#mlAdm').classList.add('hide');return;}
@@ -2316,8 +2316,8 @@ async function mlPick(id){const s=sessions.find(x=>x.id===id)||null;ML_UI.s=s;ML
   mlBuild();try{window.__replay.load(s);}catch(e){}
   $('#mlSessInfo').textContent=ML_UI.items.length+L(' movimientos para revisar · ',' movements to review · ')+fmt(s.result.duration||0)+' s';
   let b=null;try{b=s.hasVideo?await IDB.get(s.id+'#video'):s.camRef?await camBlob(s.camRef):null;}catch(e){}mlVideo(b);mlRender();}
-function mlVideo(blob){const v=$('#mlVd');if(ML_UI.vurl)URL.revokeObjectURL(ML_UI.vurl);ML_UI.vurl=blob?URL.createObjectURL(blob):null;if(blob)v.src=ML_UI.vurl;else{v.removeAttribute('src');v.load();}mlSyncInfo();}
-function mlSyncInfo(){const has=!!ML_UI.vurl;$('#mlSyncInfo').innerHTML=!ML_UI.s?'':!has?L('Sin video: carga el video del celular (la grabación de frente).','No video: load the phone video (the front recording).'):ML_UI.off==null?L('Falta sincronizar: toca <b>Sincronizar</b>.','Not synced yet: tap <b>Sync</b>.'):'<span style="color:var(--acc)">✓</span> '+L('Sincronizado: INICIO a ','Synced: START at ')+ML_UI.off.toFixed(1)+L(' s del video',' s into the video')+(ML_UI.corr!=null?' · '+L('coincidencia ','match ')+ML_UI.corr.toFixed(2):'');
+function mlVideo(blob){const v=$('#mlVd');ML_UI.vErr='';if(!v.__errH){v.__errH=1;v.addEventListener('error',()=>{if(!ML_UI.vurl)return;const e=v.error;ML_UI.vErr=e?('code '+e.code+(e.message?': '+e.message:'')):'error';mlSyncInfo();});}if(ML_UI.vurl)URL.revokeObjectURL(ML_UI.vurl);ML_UI.vurl=blob?URL.createObjectURL(blob):null;if(blob)v.src=ML_UI.vurl;else{v.removeAttribute('src');v.load();}mlSyncInfo();}
+function mlSyncInfo(){const has=!!ML_UI.vurl;if(has&&ML_UI.vErr){$('#mlSyncInfo').innerHTML='<span style="color:var(--bad)">✗</span> '+L('Este aparato no puede reproducir el video (','This device cannot play the video (')+esc(ML_UI.vErr)+L('). Prueba en otro aparato o grábalo en H.264 (Más compatible).','). Try another device or record it in H.264 (Most compatible).');['#mlSync','#mlMinus','#mlPlus'].forEach(k=>$(k).disabled=true);return;}$('#mlSyncInfo').innerHTML=!ML_UI.s?'':!has?L('Sin video: carga el video del celular (la grabación de frente).','No video: load the phone video (the front recording).'):ML_UI.off==null?L('Falta sincronizar: toca <b>Sincronizar</b>.','Not synced yet: tap <b>Sync</b>.'):'<span style="color:var(--acc)">✓</span> '+L('Sincronizado: INICIO a ','Synced: START at ')+ML_UI.off.toFixed(1)+L(' s del video',' s into the video')+(ML_UI.corr!=null?' · '+L('coincidencia ','match ')+ML_UI.corr.toFixed(2)+(ML_UI.corr<0.3?' <span style="color:var(--warn)">'+L('(baja: revisa que el video y las etiquetas caigan juntos)','(low: check that the video and the labels line up)')+'</span>':''):'');
   ['#mlSync','#mlMinus','#mlPlus'].forEach(k=>$(k).disabled=!has);}
 // sincronización automática: el movimiento del video contra los movimientos que leyó el visor (correlación de las dos señales)
 // v1.6.2: sincronizar reproduciendo a 4x (mucho más rápido en el celular que saltar cuadro por cuadro); si el navegador no deja, se usa el método de saltos
@@ -2346,12 +2346,13 @@ async function mlAutoSync(){const v0=$('#mlVd'),s=ML_UI.s;if(!s||!ML_UI.vurl)ret
     g.drawImage(v,0,0,W,H);const d=g.getImageData(0,0,W,H).data;const cur=new Float32Array(W*H);for(let i=0;i<W*H;i++)cur[i]=(d[i*4]+d[i*4+1]+d[i*4+2])/3;
     if(prev){let a=0;for(let i=0;i<cur.length;i++)a+=Math.abs(cur[i]-prev[i]);mot[k]=a/cur.length;}prev=cur;if(k%8===0)st.textContent=L('Sincronizando… ','Syncing… ')+Math.round(100*k/N)+' %';}}
   const E=ML_UI.r0.elements.filter(e=>e.code!=='R0'),T=Math.ceil((ML_UI.r0.duration||0)/step),sg=new Float32Array(T);for(const e of E)for(let k=Math.floor(e.t0/step);k<=Math.min(T-1,Math.floor(e.t1/step));k++)sg[k]=1;
-  const corr=o=>{let n=0,sx=0,sy=0,sxx=0,syy=0,sxy=0;for(let k=0;k<T;k++){const j=k+o;if(j<1||j>=N)continue;const x=sg[k],y=mot[j];n++;sx+=x;sy+=y;sxx+=x*x;syy+=y*y;sxy+=x*y;}if(n<20)return -1;const c=(sxy-sx*sy/n)/Math.sqrt(Math.max(1e-9,(sxx-sx*sx/n)*(syy-sy*sy/n)));return c;};
-  let best={c:-2,o:0};for(let o=Math.round(-10/step);o<=Math.round(Math.min(120,D)/step);o++){const c=corr(o);if(c>best.c)best={c,o};}
+  const corr=o=>{let n=0,sx=0,sy=0,sxx=0,syy=0,sxy=0;for(let k=0;k<T;k++){const j=k+o;if(j<1||j>=N)continue;const x=sg[k],y=mot[j];n++;sx+=x;sy+=y;sxx+=x*x;syy+=y*y;sxy+=x*y;}if(n<Math.max(20,0.7*T))return -9;const c=(sxy-sx*sy/n)/Math.sqrt(Math.max(1e-9,(sxx-sx*sx/n)*(syy-sy*sy/n)));return c;};
+  const dS=ML_UI.r0.duration||0,hiS=Math.min(120,Math.max(0,D-dS+2));let best={c:-10,o:0};for(let o=Math.round(-10/step);o<=Math.round(hiS/step);o++){const c=corr(o);if(c>best.c)best={c,o};}
+  if(best.c<-5){ML_UI.off=null;ML_UI.corr=null;s.videoOffset=null;save();mlSyncInfo();st.textContent=L('El video no cubre la sesión: debe empezar antes del INICIO y seguir hasta el final.','The video does not cover the session: it must start before START and run to the end.');return;}
   // afinar a 0.05 s interpolando alrededor del mejor desfase
-  const c0=corr(best.o-1),c1=best.c,c2=corr(best.o+1),den=c0-2*c1+c2,fr=Math.abs(den)>1e-9?Math.max(-0.5,Math.min(0.5,0.5*(c0-c2)/den)):0;
+  const c0=corr(best.o-1),c1=best.c,c2=corr(best.o+1),den=c0-2*c1+c2,fr=c0>-5&&c2>-5&&Math.abs(den)>1e-9?Math.max(-0.5,Math.min(0.5,0.5*(c0-c2)/den)):0;
   ML_UI.off=+((best.o+fr)*step).toFixed(2);ML_UI.corr=best.c;s.videoOffset=ML_UI.off;save();mlSyncInfo();mlShow();
-  if(best.c<0.15)msg(L('La coincidencia es baja: revisa con −0.1 / +0.1 que el video y las etiquetas caigan juntos.','Low match: check with −0.1 / +0.1 that the video and the labels line up.'),5000);}
+  if(best.c<0.3)msg(L('La coincidencia es baja: revisa con −0.1 / +0.1 que el video y las etiquetas caigan juntos.','Low match: check with −0.1 / +0.1 that the video and the labels line up.'),5000);}
 const ML_COL={J2:'#f08a24',C:'#e64fa0',U:'#a07850',hold:'#6b7f99',G1:'var(--e)',P2:'var(--acc)',P5:'var(--acc2)',X4:'var(--w)',P0:'var(--warn)',none:'var(--bad)'};
 const mlName=y=>({J2:L('la giró entre los dedos','turned it in the fingers'),C:L('giró o volteó algo','turned or flipped something'),U:L('usó una herramienta','used a tool'),hold:L('sujetó algo sin moverlo','held something still'),G1:L('tomó una pieza','grabbed a part'),P2:L('puso la pieza','placed the part'),P5:L('la acomodó con varios intentos','adjusted it with several tries'),X4:L('apretó la pieza','pressed the part'),P0:L('la soltó','let go of it'),none:L('solo se movió o se detuvo','only moved or paused')}[y]||y);
 function mlWhy(f){const w=[];if(f[3])w.push(L('le sigue un apretón','a press follows'));if(f[4])w.push(L('la suelta enseguida','it lets go right after'));if(f[5])w.push(L('la mano va por otra pieza','the hand goes for another part'));
@@ -2363,8 +2364,10 @@ function mlShow(){const it=ML_UI.items[ML_UI.i],v=$('#mlVd');if(!it)return;
   {const why=mlWhy(it.f);$('#mlSug').innerHTML='🤖 '+L('Creo que ','I think it ')+'<b>'+mlName(pr.y)+'</b> ('+Math.round(100*pr.p)+L(' % seguro',' % sure')+')'+(why?': '+why:'')+(it.y?'<br><span class="note">'+L('Tu respuesta: ','Your answer: ')+'<b style="color:'+ML_COL[it.y]+'">'+mlName(it.y)+'</b></span>':'');}
   document.querySelectorAll('#mlLab .mlch button').forEach(b=>b.classList.toggle('on',b.dataset.y===it.y));
   $('#mlPos').textContent=(ML_UI.i+1)+L(' de ',' of ')+ML_UI.items.length;$('#mlBar').style.width=(100*ML_UI.items.filter(x=>x.y).length/Math.max(1,ML_UI.items.length))+'%';
-  if(ML_UI.vurl&&ML_UI.off!=null){ML_UI.clip={a:Math.max(0,ML_UI.off+it.t0-1),b:ML_UI.off+it.t1+1,m0:ML_UI.off+it.t0,m1:ML_UI.off+it.t1};v.playbackRate=ML_UI.rate;v.currentTime=ML_UI.clip.a;if(!ML_UI.paused){const pp=v.play();if(pp&&pp.catch)pp.catch(()=>{});}}
-  $('#mlVdLbl').innerHTML=`<span>${it.t1.toFixed(1)} s</span><span style="background:${ML_UI.hc};color:#04130d;font-weight:700">${it.h==='L'?L('Mira la mano izquierda','Watch the left hand'):L('Mira la mano derecha','Watch the right hand')}</span>`;
+  ML_UI.out=false;if(ML_UI.vurl&&ML_UI.off!=null){const dv=isFinite(v.duration)?v.duration:Infinity,m0=ML_UI.off+it.t0;
+    if(m0<0||m0>dv-0.1){ML_UI.clip=null;ML_UI.out=true;v.pause();}
+    else{ML_UI.clip={a:Math.max(0,m0-1),b:Math.min(dv,ML_UI.off+it.t1+1),m0,m1:ML_UI.off+it.t1};v.playbackRate=ML_UI.rate;v.currentTime=ML_UI.clip.a;if(!ML_UI.paused){const pp=v.play();if(pp&&pp.catch)pp.catch(()=>{});}}}
+  $('#mlVdLbl').innerHTML=ML_UI.out?`<span style="background:var(--bad);color:#fff;font-weight:700">${L('Este movimiento cae fuera del video: revisa la sincronización','This movement falls outside the video: check the sync')}</span>`:`<span>${it.t1.toFixed(1)} s</span><span style="background:${ML_UI.hc};color:#04130d;font-weight:700">${it.h==='L'?L('Mira la mano izquierda','Watch the left hand'):L('Mira la mano derecha','Watch the right hand')}</span>`;
   try{$('#mlSnap').src=window.__replay.snapshot(it.t1,'front');}catch(e){}
   mlStrip();}
 function mlStrip(){$('#mlStrip').innerHTML=ML_UI.items.map((x,k)=>`<i data-k="${k}" title="${k+1} · ${x.h==='L'?L('izq.','left'):L('der.','right')} · ${x.t1.toFixed(1)} s${x.y?' · '+mlName(x.y):''}" style="${x.y?'background:'+ML_COL[x.y]:''}" class="${k===ML_UI.i?'cur':''}"></i>`).join('');}
@@ -2399,7 +2402,7 @@ async function mlTrain(){const btn=$('#mlTrain');btn.disabled=true;try{
   $('#mlMsg').textContent=L(`Modelo v${m.v} entrenado con ${m.n} ejemplos · acierto ${Math.round(100*(m.cv||0))} %. Solo en este aparato`+(MLC.on?': pon la clave del almacén para compartirlo.':' (este sitio no tiene almacén central).'),`Model v${m.v} trained with ${m.n} examples · accuracy ${Math.round(100*(m.cv||0))} %. This device only`+(MLC.on?': enter the store key to share it.':' (this site has no central store).'));
 }catch(e){$('#mlMsg').textContent=L('No se pudo entrenar en el almacén central: ','Could not train on the central store: ')+e.message;}finally{btn.disabled=false;}}
 // el fragmento se repite solo: de 1 s antes a 1 s después de la terminación; el letrero se enciende mientras dura el movimiento
-{const v=$('#mlVd');const tick=()=>{const c=ML_UI.clip;if(!c||$('#mlView').classList.contains('hide'))return;if(v.currentTime>=c.b||v.currentTime<c.a-0.3){v.currentTime=c.a;}
+{const v=$('#mlVd');const tick=()=>{const c=ML_UI.clip;if(!c||$('#mlView').classList.contains('hide'))return;if(v.currentTime>=c.b-0.02||v.ended||v.currentTime<c.a-0.3){v.currentTime=c.a;if(v.paused&&!ML_UI.paused){const pp=v.play();if(pp&&pp.catch)pp.catch(()=>{});}}
   const on=v.currentTime>=c.m0-0.05&&v.currentTime<=c.m1+0.15;$('#mlVdLbl').style.opacity=on?'1':'0.35';};
   v.addEventListener('timeupdate',tick);(function loop(){if(!v.paused)tick();requestAnimationFrame(loop);})();}
 function mlBtns(){$('#mlSpd').textContent=ML_UI.rate<1?L('Velocidad normal','Normal speed'):L('Media velocidad','Half speed');$('#mlPause').textContent=ML_UI.paused?L('▶ Repetir fragmento','▶ Loop clip'):L('⏸ Pausa','⏸ Pause');}
@@ -2434,7 +2437,7 @@ $('#mlImpL').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!
   for(const x of inc)if(!a.some(z=>z.sid===x.sid&&z.h===x.h&&Math.abs(z.t1-x.t1)<0.06)){a.push(x);n++;}mlSaveLabels(a);mlKpis();msg(n+L(' etiquetas importadas',' labels imported'));}catch(err){msg(L('Archivo no válido','Invalid file'));}};
 $('#mlBase').onclick=async()=>{try{localStorage.removeItem(MLK.model);}catch(e){}MODAPTS.ML.model=MODAPTS.ML.base.model;if(MLC.on){await MLC.refresh(true);}if(ML_UI.s&&ML_UI.s.raw)ML_UI.r1=freshOf(ML_UI.s);$('#mlMsg').textContent='';mlPill();mlKpis();if(ML_UI.items.length)mlShow();msg(L('Se usa otra vez el modelo base (v1). Tus etiquetas se conservan.','The base model (v1) is in use again. Your labels are kept.'));};
 window.__langHooks.push(()=>{mlCenUI();if(!$('#mlView').classList.contains('hide')){mlFill();mlRender();}});
-window.__ml={ui:ML_UI,pick:mlPick,sync:mlAutoSync,set:mlSet,train:mlTrain,labels:mlLabels,fill:mlFill};
+window.__ml={ui:ML_UI,show:mlShow,pick:mlPick,sync:mlAutoSync,set:mlSet,train:mlTrain,labels:mlLabels,fill:mlFill};
 if(!$('#mlView').classList.contains('hide'))mlFill();
 })();
 </script>
