@@ -17,7 +17,7 @@ export function makeHandler(store, env) {
       if (req.method === 'GET') {
         const what = u.searchParams.get('what') || 'model';
         if (what === 'ping') return J({ ok: true });
-        if (what === 'model') { const m = await meta(); const model = m.v ? await store.get('model-v' + m.v, { type: 'json' }) : null; const L = await labels(); return J({ v: m.v, model, n: L.length, sessions: new Set(L.map(x => x.sid)).size, versions: m.versions.slice(-20) }); }
+        if (what === 'model') { const m = await meta(); const model = m.v && m.active !== false ? await store.get('model-v' + m.v, { type: 'json' }) : null; const L = await labels(); return J({ v: m.v, model, n: L.length, sessions: new Set(L.map(x => x.sid)).size, versions: m.versions.slice(-20), reset: m.reset || null }); }
         if (what === 'labels') { if (key !== APP) return J({ error: 'clave' }, 401); return J({ labels: await labels() }); }
         return J({ error: 'what' }, 400);
       }
@@ -35,7 +35,7 @@ export function makeHandler(store, env) {
         if (!mod || !mod.tree) return J({ error: 'modelo' }, 400);
         if (b.base != null && b.base !== m.v) return J({ error: 'versión', v: m.v }, 409); // alguien entrenó antes: bajar y volver a entrenar
         const v = m.v + 1; mod.v = v; await store.setJSON('model-v' + v, mod);
-        m.v = v; m.versions.push({ v, n: mod.n, cv: mod.cv, date: new Date().toISOString(), dev: String(b.dev || '').slice(0, 40) }); await store.setJSON('meta', m);
+        m.v = v; m.active = true; m.versions.push({ v, n: mod.n, cv: mod.cv, date: new Date().toISOString(), dev: String(b.dev || '').slice(0, 40) }); await store.setJSON('meta', m);
         return J({ ok: true, v });
       }
       if (b.action === 'deleteSession') {
@@ -44,12 +44,19 @@ export function makeHandler(store, env) {
         if (gone) { await store.setJSON('backup-' + Date.now(), { sid: b.sid, labels: L.filter(x => x.sid === b.sid) }); await store.setJSON('labels', keep); }
         return J({ ok: true, gone, n: keep.length });
       }
+      if (b.action === 'wipe') { // empezar de cero: todas las etiquetas fuera y sin modelo activo; queda respaldo y las versiones viejas siguen para regresar
+        if (admin !== ADMIN) return J({ error: 'clave de administrador' }, 403);
+        const L = await labels(), m = await meta(), ts = Date.now();
+        await store.setJSON('backup-' + ts, { wipe: true, labels: L, meta: m });
+        await store.setJSON('labels', []); m.active = false; m.reset = ts; await store.setJSON('meta', m);
+        return J({ ok: true, gone: L.length, reset: ts });
+      }
       if (b.action === 'rollback') {
         if (admin !== ADMIN) return J({ error: 'clave de administrador' }, 403);
         const m = await meta(), old = await store.get('model-v' + b.v, { type: 'json' });
         if (!old) return J({ error: 'no existe esa versión' }, 404);
         const v = m.v + 1, mod = Object.assign({}, old, { v, from: b.v }); await store.setJSON('model-v' + v, mod);
-        m.v = v; m.versions.push({ v, n: mod.n, cv: mod.cv, date: new Date().toISOString(), from: b.v }); await store.setJSON('meta', m);
+        m.v = v; m.active = true; m.versions.push({ v, n: mod.n, cv: mod.cv, date: new Date().toISOString(), from: b.v }); await store.setJSON('meta', m);
         return J({ ok: true, v });
       }
       return J({ error: 'acción' }, 400);
