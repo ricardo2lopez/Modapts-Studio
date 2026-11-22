@@ -187,7 +187,7 @@ button.glcode:hover,button.glcode.on{background:var(--panel2)}button.glcode.on{o
         <p class="note" id="mlSyncInfo"></p></div>
     </div>
   </div>
-  <div class="card" id="mlLab"><h2><span class="mln">3</span> <span data-t="mlS3"></span></h2>
+  <div class="card hide" id="mlLab"><h2><span class="mln">3</span> <span data-t="mlS3"></span></h2>
     <div class="mlgrid">
       <div class="mlvid"><video id="mlVd" playsinline muted controls preload="auto"></video><div id="mlVdLbl"></div></div>
       <div class="mlsnap"><img id="mlSnap" alt=""><span class="note" data-t="mlSnapN"></span></div>
@@ -2279,11 +2279,12 @@ const MLC={on:false,v:0,n:0,ns:0,versions:[],url:'/api/ml',
   async post(b,adm){try{const h={'content-type':'application/json','x-modapts-key':MLC.key()};if(adm)h['x-modapts-admin']=adm;const r=await fetch(MLC.url,{method:'POST',headers:h,body:JSON.stringify(b)});const j=await r.json().catch(()=>({}));return Object.assign(j,{status:r.status,ok:r.ok&&j.ok});}catch(e){return {error:e.message,status:0};}},
   async refresh(quiet){let probe=!/^(localhost|127\.0\.0\.1)$/.test(location.hostname);try{if(localStorage.getItem('modapts_ml_api')==='1')probe=true;}catch(e){}
     if(location.protocol==='file:'||!probe){MLC.on=false;mlCenUI();return;}
-    let r;try{const x=await fetch(MLC.url+'?what=model',{cache:'no-store'});if(!x.ok||!/json/.test(x.headers.get('content-type')||''))throw 0;r=await x.json();}catch(e){MLC.on=false;mlCenUI();return;}
+    let r;MLC.err='';try{const x=await fetch(MLC.url+'?what=model',{cache:'no-store'});if(!/json/.test(x.headers.get('content-type')||''))throw 0;r=await x.json();if(!x.ok){MLC.err=r.error||String(x.status);throw 0;}}catch(e){MLC.on=false;mlCenUI();return;}
     MLC.on=true;MLC.v=r.v||0;MLC.n=r.n||0;MLC.ns=r.sessions||0;MLC.versions=r.versions||[];
     if(r.model&&r.model.tree){const m=Object.assign(r.model,{src:'central',v:r.v});const cur0=MODAPTS.ML.model;if(!cur0||cur0.src!=='central'||cur0.v!==m.v||(cur0.date!==m.date)){MODAPTS.ML.model=m;try{localStorage.setItem(MLK.model,JSON.stringify(m));}catch(e){}}}
     mlCenUI();if(!quiet&&$('#mlModelPill'))mlPill();}};
 function mlCenUI(){const st=$('#mlCenSt');if(!st)return;
+  if(!MLC.on&&MLC.err){st.innerHTML=L('El almacén central existe pero no está listo: ','The central store exists but is not ready: ')+esc(MLC.err)+L('. Revisa las claves en Netlify y vuelve a publicar.','. Check the keys in Netlify and publish again.');$('#mlCenKeyRow').classList.add('hide');$('#mlAdm').classList.add('hide');return;}
   if(!MLC.on){st.innerHTML=L('Sin almacén central: este sitio no tiene la función (hay que publicarlo desde GitHub). Lo que etiquetes y entrenes se queda solo en este aparato; usa Exportar etiquetas para juntarlas.','No central store: this site has no function (it has to be published from GitHub). What you label and train stays on this device only; use Export labels to gather them.');$('#mlCenKeyRow').classList.add('hide');$('#mlAdm').classList.add('hide');return;}
   $('#mlCenKeyRow').classList.remove('hide');$('#mlAdm').classList.remove('hide');const k=!!MLC.key();
   st.innerHTML='<span style="color:var(--acc)">●</span> '+L('Almacén central conectado','Central store connected')+' · '+MLC.n+L(' etiquetas de ',' labels from ')+MLC.ns+L(' sesiones',' sessions')+' · '+(MLC.v?L('modelo central v','central model v')+MLC.v:L('sin modelo central todavía','no central model yet'))+(k?'':'<br>'+L('Pon la clave del almacén (te la doy aparte) para subir etiquetas y entrenar con todos los aparatos.','Enter the store key (given separately) to upload labels and train with every device.'));
