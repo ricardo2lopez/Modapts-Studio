@@ -2309,14 +2309,31 @@ function mlVideo(blob){const v=$('#mlVd');if(ML_UI.vurl)URL.revokeObjectURL(ML_U
 function mlSyncInfo(){const has=!!ML_UI.vurl;$('#mlSyncInfo').innerHTML=!ML_UI.s?'':!has?L('Sin video: carga el video del celular (la grabación de frente).','No video: load the phone video (the front recording).'):ML_UI.off==null?L('Falta sincronizar: toca <b>Sincronizar</b>.','Not synced yet: tap <b>Sync</b>.'):'<span style="color:var(--acc)">✓</span> '+L('Sincronizado: INICIO a ','Synced: START at ')+ML_UI.off.toFixed(1)+L(' s del video',' s into the video')+(ML_UI.corr!=null?' · '+L('coincidencia ','match ')+ML_UI.corr.toFixed(2):'');
   ['#mlSync','#mlMinus','#mlPlus'].forEach(k=>$(k).disabled=!has);}
 // sincronización automática: el movimiento del video contra los movimientos que leyó el visor (correlación de las dos señales)
+// v1.6.2: sincronizar reproduciendo a 4x (mucho más rápido en el celular que saltar cuadro por cuadro); si el navegador no deja, se usa el método de saltos
+async function mlMotionPlay(v,D,W,H,g,step,N,st){try{
+  v.style.cssText='position:fixed;left:0;top:0;width:4px;height:4px;opacity:0.01;pointer-events:none';document.body.appendChild(v);
+  v.currentTime=0;await new Promise(ok=>{const f=()=>{v.removeEventListener('seeked',f);ok();};v.addEventListener('seeked',f);setTimeout(ok,1200);});
+  v.playbackRate=4;const S=[];let prev=null,pt=-1,done=false;
+  const sample=t=>{if(t<=pt+0.02)return;g.drawImage(v,0,0,W,H);const d=g.getImageData(0,0,W,H).data,cur=new Float32Array(W*H);for(let i=0;i<W*H;i++)cur[i]=(d[i*4]+d[i*4+1]+d[i*4+2])/3;
+    if(prev){let a=0;for(let i=0;i<cur.length;i++)a+=Math.abs(cur[i]-prev[i]);S.push([t,a/cur.length/Math.max(0.04,t-pt)*0.25]);}prev=cur;pt=t;if(S.length%10===0)st.textContent=L('Sincronizando… ','Syncing… ')+Math.min(99,Math.round(100*t/D))+' %';};
+  const rv=typeof v.requestVideoFrameCallback==='function';
+  if(rv){const cb=(now,md)=>{if(done)return;sample(md.mediaTime);v.requestVideoFrameCallback(cb);};v.requestVideoFrameCallback(cb);}
+  const iv=rv?null:setInterval(()=>sample(v.currentTime),50);
+  await v.play();
+  await new Promise(ok=>{const end=()=>{done=true;ok();};v.addEventListener('ended',end,{once:true});const chk=setInterval(()=>{if(v.currentTime>=D-0.15||done){clearInterval(chk);end();}},250);});
+  if(iv)clearInterval(iv);v.pause();v.remove();
+  if(S.length<D*1.5)return null; // muy pocas muestras: mejor el método de saltos
+  const mot=new Float32Array(N),cnt=new Uint16Array(N);for(const [t,m] of S){const k=Math.round(t/step);if(k>=0&&k<N){mot[k]+=m;cnt[k]++;}}
+  let last=-1;for(let k=0;k<N;k++){if(cnt[k]){mot[k]/=cnt[k];if(last>=0&&k-last>1)for(let j=last+1;j<k;j++)mot[j]=mot[last]+(mot[k]-mot[last])*(j-last)/(k-last);last=k;}}
+  return mot;}catch(e){try{v.pause();v.remove();}catch(_){}return null;}}
 async function mlAutoSync(){const v0=$('#mlVd'),s=ML_UI.s;if(!s||!ML_UI.vurl)return;const st=$('#mlSyncInfo');
   const v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.src=ML_UI.vurl;
   await new Promise((ok,ko)=>{v.onloadeddata=ok;v.onerror=ko;setTimeout(ok,8000);});const D=v.duration;if(!isFinite(D)||D<2){st.textContent=L('No se pudo leer el video.','Could not read the video.');return;}
   const W=48,H=Math.max(16,Math.round(W*(v.videoHeight||16)/(v.videoWidth||9))),cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d',{willReadFrequently:true});
-  const step=0.25,N=Math.floor(D/step),mot=new Float32Array(N);let prev=null;
-  for(let k=0;k<N;k++){v.currentTime=k*step;await new Promise(ok=>{const f=()=>{v.removeEventListener('seeked',f);ok();};v.addEventListener('seeked',f);setTimeout(ok,1500);});
+  const step=0.25,N=Math.floor(D/step);let mot=window.__mlForceSeek?null:await mlMotionPlay(v,D,W,H,g,step,N,st);let prev=null;ML_UI.syncMode=mot?'play':'seek';
+  if(!mot){mot=new Float32Array(N);for(let k=0;k<N;k++){v.currentTime=k*step;await new Promise(ok=>{const f=()=>{v.removeEventListener('seeked',f);ok();};v.addEventListener('seeked',f);setTimeout(ok,1500);});
     g.drawImage(v,0,0,W,H);const d=g.getImageData(0,0,W,H).data;const cur=new Float32Array(W*H);for(let i=0;i<W*H;i++)cur[i]=(d[i*4]+d[i*4+1]+d[i*4+2])/3;
-    if(prev){let a=0;for(let i=0;i<cur.length;i++)a+=Math.abs(cur[i]-prev[i]);mot[k]=a/cur.length;}prev=cur;if(k%8===0)st.textContent=L('Sincronizando… ','Syncing… ')+Math.round(100*k/N)+' %';}
+    if(prev){let a=0;for(let i=0;i<cur.length;i++)a+=Math.abs(cur[i]-prev[i]);mot[k]=a/cur.length;}prev=cur;if(k%8===0)st.textContent=L('Sincronizando… ','Syncing… ')+Math.round(100*k/N)+' %';}}
   const E=ML_UI.r0.elements.filter(e=>e.code!=='R0'),T=Math.ceil((ML_UI.r0.duration||0)/step),sg=new Float32Array(T);for(const e of E)for(let k=Math.floor(e.t0/step);k<=Math.min(T-1,Math.floor(e.t1/step));k++)sg[k]=1;
   const corr=o=>{let n=0,sx=0,sy=0,sxx=0,syy=0,sxy=0;for(let k=0;k<T;k++){const j=k+o;if(j<1||j>=N)continue;const x=sg[k],y=mot[j];n++;sx+=x;sy+=y;sxx+=x*x;syy+=y*y;sxy+=x*y;}if(n<20)return -1;const c=(sxy-sx*sy/n)/Math.sqrt(Math.max(1e-9,(sxx-sx*sx/n)*(syy-sy*sy/n)));return c;};
   let best={c:-2,o:0};for(let o=Math.round(-10/step);o<=Math.round(Math.min(120,D)/step);o++){const c=corr(o);if(c>best.c)best={c,o};}
