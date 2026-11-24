@@ -65,7 +65,7 @@ button.glcode:hover,button.glcode.on{background:var(--panel2)}button.glcode.on{o
 <body>
 <div class="wrap">
 <header>
-  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.7.0</span></h1><div class="sub" data-t="sub"></div></div>
+  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.7.1</span></h1><div class="sub" data-t="sub"></div></div>
   <div class="row"><button class="sm" id="langBtn" title="Idioma / Language">EN</button><button class="sm" id="theme" data-t="theme"></button></div>
 </header>
 
@@ -542,6 +542,34 @@ function paretoPages(doc,r,lang,PW,M,CW,hdr){const es=lang==='es',P=paretoData(r
   doc.setFont('helvetica','normal');doc.setFontSize(8.5);if(single.length){doc.text((es?'Familias de un solo código: ':'Single-code families: ')+single.map(f=>`${f.codes[0]} ${f.n} ${es?'veces':'times'} (${f.m} MODs)`).join(' · '),M,y,{maxWidth:CW});y+=6;}
   doc.setFontSize(7.5);doc.setTextColor(93,107,120);doc.text(es?'R0 (soltar) no se incluye: no es un código de la norma. MODs antes de la regla de movimientos simultáneos. El detalle movimiento por movimiento está en el Excel. Norma: MODAPTS, IMA 2017 · 1 MOD = 0.129 s.':'R0 (release) is not included: it is not a code in the standard. MODs before the simultaneous-motion rule. The motion-by-motion detail is in the Excel file. Standard: MODAPTS, IMA 2017 · 1 MOD = 0.129 s.',M,y,{maxWidth:CW});doc.setTextColor(20,32,43);
   return y+10;}
+// v1.7.1: Pareto de desperdicios en el reporte (mismos números que la pantalla)
+const WSN={es:{pace:'Ritmo (lentitud y pausas)',layout:'Distribución de materiales',extra:'Movimientos de más',hand:'Mano predominante',body:'Cuerpo y postura',pauseHold:'Pausas con pieza en la mano',pauseFree:'Pausas sin pieza',empty:'Viajes sin pieza',reachGrasp:'Alcanzar y tomar',carryPut:'Llevar y poner',press:'Apretar',turn:'Girar o herramienta',pileL:'Montón izquierda',pileR:'Montón derecha',buildL:'Zona de armado izquierda',buildR:'Zona de armado derecha',eyes:'Voltear a ver (ojos)',turnFingers:'Girar la pieza en los dedos',regrasp:'Volver a agarrar',tries:'Varios intentos al acomodar',cross:'Cruces al lado de la otra mano',weakSlow:'Mano débil más lenta que la fuerte',bodyMoves:'Inclinarse, girar, pararse o caminar'},
+  en:{pace:'Pace (slowness and pauses)',layout:'Material layout',extra:'Extra motions',hand:'Dominant hand',body:'Body and posture',pauseHold:'Pauses holding a part',pauseFree:'Pauses without a part',empty:'Trips without a part',reachGrasp:'Reach and grasp',carryPut:'Carry and place',press:'Press',turn:'Turn or tool',pileL:'Left pile',pileR:'Right pile',buildL:'Left build zone',buildR:'Right build zone',eyes:'Looking (eyes)',turnFingers:'Turning the part in the fingers',regrasp:'Grasping again',tries:'Several tries to fit',cross:'Crossing to the other side',weakSlow:'Weak hand slower than the strong',bodyMoves:'Bending, turning, standing, walking'}};
+const WSC={pace:[232,104,74],layout:[226,160,30],extra:[60,140,210],hand:[150,100,225],body:[40,170,155]};
+function wastePages(doc,r,lang,sess,M,CW){if(sess&&sess.calib)return null;if(!r||!r.elements||!r.elements.length||!(r.stdTime>0)||!window.MODAPTS||!MODAPTS.wasteOf)return null;
+  const es=lang==='es',N=WSN[lang]||WSN.es,w=MODAPTS.wasteOf(r),f1=v=>(+v).toFixed(1);doc.addPage();let y=16;
+  doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(20,32,43);doc.text(es?'PARETO DE DESPERDICIOS':'WASTE PARETO',M,y);y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(93,107,120);doc.text(es?'¿De dónde sale el tiempo de más? Ritmo = tiempo real por encima de los MODs. Los otros cuatro = MODs que el método ideal no tendría. Todo en segundos.':'Where does the extra time come from? Pace = real time above the MODs. The other four = MODs the ideal method would not have. Everything in seconds.',M,y,{maxWidth:CW});y+=8;
+  const K=[[es?'Tiempo real':'Real time',f1(w.T)+' s'],[es?'Tiempo en MODs (método actual)':'MODs time (current method)',f1(w.S)+' s'],[es?'Tiempo ideal (sin desperdicios)':'Ideal time (no waste)',f1(w.ideal)+' s'],[es?'Tiempo de más':'Extra time',f1(w.tot)+' s ('+Math.round(w.tot/(w.T||1)*100)+' %)']];
+  const bw=(CW-9)/4;K.forEach((k,i)=>{const x=M+i*(bw+3);doc.setFillColor(242,245,248);doc.roundedRect(x,y,bw,15,2,2,'F');doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(i===3?200:20,i===3?70:32,i===3?50:43);doc.text(k[1],x+3,y+7);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(93,107,120);doc.text(k[0],x+3,y+12);});y+=22;
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(20,32,43);doc.text(es?'Nivel 1 · Por rubro':'Level 1 · By category',M,y);y+=5;
+  const LW=58,VW=34,BW=CW-LW-VW-2,mx=Math.max(...w.l1.map(x=>x.s),0.01);let cum=0;
+  for(const x of w.l1){cum+=x.s;doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(20,32,43);doc.text(N[x.k],M,y+3.6);doc.setFillColor(...WSC[x.k]);doc.rect(M+LW,y,Math.max(0.6,BW*x.s/mx),5,'F');
+    doc.setFont('helvetica','bold');doc.text(f1(x.s)+' s',M+CW-VW+14,y+3.6,{align:'right'});doc.setFont('helvetica','normal');doc.setTextColor(93,107,120);doc.text(Math.round(x.s/(w.tot||1)*100)+' % · '+(es?'acum. ':'cum. ')+Math.round(cum/(w.tot||1)*100)+' %',M+CW-VW+16,y+3.6);y+=7.5;}
+  y+=4;doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(20,32,43);doc.text(es?'Nivel 2 · Dentro de cada rubro':'Level 2 · Within each category',M,y);y+=3;
+  const half=(CW-6)/2,sub={pace:es?'Pausas: ninguna mano se mueve. Lentitud: se mueve más despacio que su MOD.':'Pauses: no hand moves. Slowness: moving slower than its MOD.',layout:es?'Viajes de más contra la pieza al alcance (M3): qué acercar primero.':'Extra trips against the part within reach (M3): what to bring closer first.',
+    hand:es?`Uso: derecha ${w.use.R} % · izquierda ${w.use.L} % de los MODs. Real contra MOD: derecha ${w.ratio.R.toFixed(2)} · izquierda ${w.ratio.L.toFixed(2)}.`:`Use: right ${w.use.R} % · left ${w.use.L} % of the MODs. Real against MOD: right ${w.ratio.R.toFixed(2)} · left ${w.ratio.L.toFixed(2)}.`};
+  const boxH=x=>9+(sub[x.k]?doc.splitTextToSize(sub[x.k],half-4).length*3.2:0)+x.items.length*5.2+2;
+  let col=0,rowY=y,rowH=0;
+  for(const x of w.l1){const xx=M+col*(half+6),bh=boxH(x);if(col===0){const nx=w.l1[w.l1.indexOf(x)+1],need=Math.max(bh,nx?boxH(nx):0);if(rowY+need>272){doc.addPage();rowY=16;}}
+    doc.setDrawColor(...WSC[x.k]);doc.setLineWidth(0.6);doc.line(xx,rowY+1,xx,rowY+bh-1);let yy=rowY+5;doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...WSC[x.k]);doc.text(N[x.k]+' · '+f1(x.s)+' s',xx+3,yy);yy+=4;
+    if(sub[x.k]){doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(93,107,120);const ls=doc.splitTextToSize(sub[x.k],half-4);doc.text(ls,xx+3,yy);yy+=ls.length*3.2;}
+    const m=Math.max(...x.items.map(i=>i[1]),0.01),lw=half*0.52,vb=half-lw-18;
+    for(const [k,v] of x.items){doc.setFont('helvetica','normal');doc.setFontSize(7.8);doc.setTextColor(20,32,43);doc.text(doc.splitTextToSize(N[k]||k,lw-2)[0],xx+3,yy+2.6);doc.setFillColor(...WSC[x.k]);doc.rect(xx+3+lw,yy,Math.max(0.5,vb*v/m),3.2,'F');doc.setFont('helvetica','bold');doc.text(f1(v)+' s',xx+half,yy+2.6,{align:'right'});yy+=5.2;}
+    rowH=Math.max(rowH,bh);col++;if(col===2){col=0;rowY+=rowH+4;rowH=0;}}
+  y=col?rowY+rowH+4:rowY;if(y>262){doc.addPage();y=16;}
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(93,107,120);doc.text(es?'El ideal supone las piezas al alcance (M3) y las dos manos a su MOD. La terminación de cada movimiento sale del modelo de machine learning: mientras tenga poco acierto, tómalo como preliminar. 1 MOD = 0.129 s.':'The ideal assumes parts within reach (M3) and both hands at their MOD. Each movement ending comes from the machine learning model: while its accuracy is low, take this as preliminary. 1 MOD = 0.129 s.',M,y,{maxWidth:CW});doc.setTextColor(20,32,43);
+  return y+12;}
 function handUseBlock(doc,r,lang,M,CW,y){const es=lang==='es',hex=hexRGB;
   const U=r.ergo&&r.ergo.handUse;if(!U)return y;
   doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(93,107,120);doc.text(es?`% del tiempo total de la grabación (${U.T} s).`:`% of the total recording time (${U.T} s).`,M,y);doc.setTextColor(20,32,43);y+=5;
@@ -679,6 +707,7 @@ async function makePDF(sess,lang){
       ml?(es?`Terminaciones (P0, P2, P5) decididas por el modelo de machine learning v${ml.v} (${ml.n} ejemplos revisados con video): ${ml.P2+ml.P5} colocaciones, ${ml.none} tramos de ruido juntados, ${ml.kept} dudosas marcadas "probable".`:`Terminations (P0, P2, P5) decided by machine learning model v${ml.v} (${ml.n} examples reviewed on video): ${ml.P2+ml.P5} placements, ${ml.none} noise segments merged, ${ml.kept} uncertain ones flagged "probable".`):(es?'Terminaciones (P0, P2, P5) por las reglas del motor, sin modelo de machine learning.':'Terminations (P0, P2, P5) by the engine rules, without the machine learning model.')];
     doc.setFont('helvetica','normal');doc.setFontSize(7.6);doc.setTextColor(93,107,120);let L=lines.map(l=>doc.splitTextToSize(l,CW));const h=L.reduce((a,l)=>a+l.length*3.3+1,0);if(y+h>262){doc.addPage();y=18;}
     for(const l of L){doc.text(l,M,y);y+=l.length*3.3+1;}doc.setTextColor(20,32,43);y+=4;}
+  {const yw=wastePages(doc,r,lang,sess,M,CW);y=yw||y;}
   {const yy=paretoPages(doc,r,lang,PW,M,CW);y=yy||y;}
   // ciclos
   if(X.cy.length>1){if(y>220){doc.addPage();y=18;}const d=X.cy.map(c=>c.dur),a=d.reduce((p,q)=>p+q,0)/d.length;
@@ -729,7 +758,7 @@ function comparePDF(C,table,concl,warns,lang){
   doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(es?'CONCLUSIÓN':'CONCLUSION',M,y+2);y+=5;doc.setFont('helvetica','normal');doc.setFontSize(8.3);
   concl.forEach((c,i)=>{const L=doc.splitTextToSize((i+1)+'. '+c.replace(/→/g,'->'),CW);if(y+L.length*3.5>272)return;doc.text(L,M,y+2);y+=L.length*3.5+1;});
   return doc;}
-window.__pdf={vaOf,comparePDF,idleOf,makePDF,describe,stdChartImg,rowsFor,conclusions,methodRows,times,defs};
+window.__pdf={wastePages,vaOf,comparePDF,idleOf,makePDF,describe,stdChartImg,rowsFor,conclusions,methodRows,times,defs};
 })();
 </script>
 <script>/* ===== MODAPTS ENGINE =====
