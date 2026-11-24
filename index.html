@@ -65,7 +65,7 @@ button.glcode:hover,button.glcode.on{background:var(--panel2)}button.glcode.on{o
 <body>
 <div class="wrap">
 <header>
-  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.7.1</span></h1><div class="sub" data-t="sub"></div></div>
+  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.7.2</span></h1><div class="sub" data-t="sub"></div></div>
   <div class="row"><button class="sm" id="langBtn" title="Idioma / Language">EN</button><button class="sm" id="theme" data-t="theme"></button></div>
 </header>
 
@@ -241,7 +241,7 @@ button.glcode:hover,button.glcode.on{background:var(--panel2)}button.glcode.on{o
     <p class="note" id="cmpMsg"></p>
   </div>
   <div class="card" id="mcCard"><h2 data-t="mcH"></h2><p class="note" data-t="mcIntro"></p>
-    <div class="row"><label class="btn sm"><span data-t="mcImp"></span><input type="file" id="mcImp" multiple accept=".json,.zip,application/zip,application/json" hidden></label><button class="sm" id="mcAll" data-t="mcAll"></button><button class="pri" id="mcGo" data-t="mcGo"></button></div>
+    <div class="row"><label class="btn sm"><span data-t="mcImp"></span><input type="file" id="mcImp" multiple accept=".json,.zip,application/zip,application/json" hidden></label><button class="sm" id="mcAll" data-t="mcAll"></button><button class="pri" id="mcGo" data-t="mcGo"></button><select id="mcPdfLang" style="background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:5px"><option value="es">ES</option><option value="en">EN</option></select><button class="sm" id="mcPdf" disabled>⬇ PDF</button></div>
     <div class="tblwrap" style="margin-top:8px;max-height:360px;overflow:auto"><table><thead><tr><th></th><th data-t="mcSess"></th><th data-t="mcPer"></th><th data-t="mcMet"></th></tr></thead><tbody id="mcList"></tbody></table></div>
     <p class="note" id="mcMsg"></p><div id="mcOut"></div>
   </div>
@@ -738,6 +738,36 @@ async function makePDF(sess,lang){
   return {doc,pages:n};
 }
 // comparación antes / después en una sola hoja carta
+// v1.7.2: PDF del comparador de varias sesiones
+function multiPDF(D,T,lang){const {jsPDF}=window.jspdf,es=lang==='es',doc=new jsPDF({unit:'mm',format:'letter'}),PW=215.9,M=12,CW=PW-2*M,N=WSN[lang]||WSN.es,f1=v=>(+v).toFixed(1),K=['pace','layout','extra','hand','body'],IC=[61,74,88];let y;
+  doc.setFillColor(20,32,43);doc.rect(0,0,PW,22,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(15);doc.text(es?'COMPARACIÓN DE SESIONES · MODAPTS':'SESSION COMPARISON · MODAPTS',M,13);
+  doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.text(`MODAPTS Studio · ${D.R.length} ${es?'sesiones':'sessions'} · 1 MOD = 0.129 s · `+new Date(D.date).toLocaleDateString(),M,18.5);doc.setTextColor(20,32,43);y=29;
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(es?'Conclusión':'Conclusion',M,y);y+=4.5;doc.setFont('helvetica','normal');doc.setFontSize(9);const cl=doc.splitTextToSize(T.concl,CW);doc.text(cl,M,y);y+=cl.length*4.2+1;
+  if(T.odd){doc.setFontSize(8);doc.setTextColor(176,110,0);const o=doc.splitTextToSize('! '+T.odd,CW);doc.text(o,M,y);y+=o.length*3.6+1;doc.setTextColor(20,32,43);}
+  y+=3;doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(es?'Ranking por tiempo real':'Ranking by real time',M,y);y+=2;
+  const maxT=Math.max(...D.R.map(x=>x.T),1);
+  doc.autoTable({startY:y+1,margin:{left:M,right:M},theme:'grid',head:[['#',es?'Sesión':'Session',es?'Persona':'Person',es?'Método':'Method',es?'Tiempo real, partido en desperdicios':'Real time, split into waste',es?'Real':'Real','MODs',es?'Real / MODs':'Real / MODs']],
+    body:D.rk.map((x,i)=>[String(i+1),x.name,x.per,x.met,'',f1(x.T)+' s',f1(x.S)+' s',Math.round(x.T/(x.S||1)*100)+' %']),
+    styles:{fontSize:7.8,cellPadding:1.2,lineColor:[210,216,222],textColor:[20,32,43]},headStyles:{fillColor:[20,32,43],textColor:255,fontSize:7.6},columnStyles:{0:{cellWidth:7},4:{cellWidth:62},5:{halign:'right',fontStyle:'bold'},6:{halign:'right'},7:{halign:'right'}},
+    didParseCell:d=>{if(d.section==='body'&&d.row.index===0)d.cell.styles.fillColor=[226,244,233];},
+    didDrawCell:d=>{if(d.section!=='body'||d.column.index!==4)return;const x=D.rk[d.row.index],w=d.cell.width-2,h=3.4;let xx=d.cell.x+1;const yy=d.cell.y+(d.cell.height-h)/2;
+      for(const [v,c] of [[x.ideal,IC],...K.map(k=>[x.by[k]||0,WSC[k]])]){const ww=w*v/maxT;if(ww>0.05){doc.setFillColor(...c);doc.rect(xx,yy,ww,h,'F');xx+=ww;}}}});
+  y=doc.lastAutoTable.finalY+3;doc.setFontSize(7);let lx=M;for(const [lab,c] of [[es?'tiempo ideal':'ideal time',IC],...K.map(k=>[N[k],WSC[k]])]){doc.setFillColor(...c);doc.rect(lx,y-2.4,3,3,'F');doc.setTextColor(93,107,120);doc.text(lab,lx+4,y);lx+=doc.getTextWidth(lab)+9;}doc.setTextColor(20,32,43);y+=7;
+  if(y>230){doc.addPage();y=16;}const half=(CW-6)/2;
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(es?'Mejor método (MODs, sin importar quién)':'Best method (MODs, whoever did it)',M,y);doc.text((es?'Mejor ritmo dentro del método ':'Best pace within method ')+D.best.m,M+half+6,y);
+  doc.autoTable({startY:y+2,margin:{left:M,right:PW-M-half},tableWidth:half,theme:'grid',head:[[es?'Método':'Method',es?'MODs promedio':'Average MODs',N.layout,es?'Sesiones':'Sessions']],body:D.M.map(x=>[x.m,f1(x.S)+' s',f1(x.lay)+' s',String(x.a.length)]),
+    styles:{fontSize:7.8,cellPadding:1.2,lineColor:[210,216,222]},headStyles:{fillColor:[20,32,43],textColor:255,fontSize:7.6},didParseCell:d=>{if(d.section==='body'&&d.row.index===0)d.cell.styles.fillColor=[226,244,233];}});
+  let y1=doc.lastAutoTable.finalY;if(T.methodNote){doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(93,107,120);const mn=doc.splitTextToSize(T.methodNote,half);doc.text(mn,M,y1+4);y1+=4+mn.length*3.3;doc.setTextColor(20,32,43);}
+  doc.autoTable({startY:y+2,margin:{left:M+half+6,right:M},tableWidth:half,theme:'grid',head:[[es?'Persona':'Person',es?'Real / MODs':'Real / MODs',N.hand,N.body]],body:D.P.map(x=>[x.per,Math.round(x.T/(x.S||1)*100)+' %',f1(x.by.hand||0)+' s'+(T.slow(x)?' · '+T.slow(x):''),f1(x.by.body||0)+' s']),
+    styles:{fontSize:7.8,cellPadding:1.2,lineColor:[210,216,222]},headStyles:{fillColor:[20,32,43],textColor:255,fontSize:7.6},didParseCell:d=>{if(d.section==='body'&&d.row.index===0)d.cell.styles.fillColor=[226,244,233];}});
+  y=Math.max(y1,doc.lastAutoTable.finalY)+8;if(y>235){doc.addPage();y=16;}
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(es?'Desperdicios por sesión (segundos)':'Waste per session (seconds)',M,y);
+  doc.autoTable({startY:y+2,margin:{left:M,right:M},theme:'grid',head:[[es?'Sesión':'Session',es?'Persona':'Person',es?'Método':'Method',es?'Ideal':'Ideal',...K.map(k=>N[k])]],body:D.rk.map(x=>[x.name,x.per,x.met,f1(x.ideal),...K.map(k=>f1(x.by[k]||0))]),
+    styles:{fontSize:7.4,cellPadding:1.1,lineColor:[210,216,222],halign:'right'},headStyles:{fillColor:[20,32,43],textColor:255,fontSize:7,halign:'center'},columnStyles:{0:{halign:'left'},1:{halign:'left'},2:{halign:'left'}}});
+  y=doc.lastAutoTable.finalY+5;if(y>262){doc.addPage();y=16;}doc.setFont('helvetica','normal');doc.setFontSize(7.3);doc.setTextColor(93,107,120);
+  doc.text(es?'Ritmo = tiempo real por encima de los MODs. Los otros cuatro = MODs que el método ideal no tendría (piezas al alcance M3, las dos manos a su MOD). Compara solo sesiones de la misma tarea. Norma MODAPTS, IMA 2017.':'Pace = real time above the MODs. The other four = MODs the ideal method would not have (parts within reach M3, both hands at their MOD). Compare only sessions of the same task. MODAPTS standard, IMA 2017.',M,y,{maxWidth:CW});
+  const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFontSize(7.5);doc.setTextColor(93,107,120);doc.text('MODAPTS Studio',M,272);doc.text((es?'Página ':'Page ')+i+(es?' de ':' of ')+n,PW-M,272,{align:'right'});}
+  return doc;}
 function comparePDF(C,table,concl,warns,lang){
   const {jsPDF}=window.jspdf,es=lang==='es',doc=new jsPDF({unit:'mm',format:'letter'}),PW=215.9,M=12,CW=PW-2*M;let y=14;
   doc.setFillColor(20,32,43);doc.rect(0,0,PW,22,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(15);doc.text(es?'COMPARACIÓN ANTES / DESPUÉS · MODAPTS':'BEFORE / AFTER COMPARISON · MODAPTS',M,13);
@@ -758,7 +788,7 @@ function comparePDF(C,table,concl,warns,lang){
   doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(es?'CONCLUSIÓN':'CONCLUSION',M,y+2);y+=5;doc.setFont('helvetica','normal');doc.setFontSize(8.3);
   concl.forEach((c,i)=>{const L=doc.splitTextToSize((i+1)+'. '+c.replace(/→/g,'->'),CW);if(y+L.length*3.5>272)return;doc.text(L,M,y+2);y+=L.length*3.5+1;});
   return doc;}
-window.__pdf={wastePages,vaOf,comparePDF,idleOf,makePDF,describe,stdChartImg,rowsFor,conclusions,methodRows,times,defs};
+window.__pdf={multiPDF,wastePages,vaOf,comparePDF,idleOf,makePDF,describe,stdChartImg,rowsFor,conclusions,methodRows,times,defs};
 })();
 </script>
 <script>/* ===== MODAPTS ENGINE =====
@@ -2259,28 +2289,34 @@ $('#mcGo').onclick = () => { const S = sessions.filter(s => MC.sel.has(s.id) && 
   if (S.length < 2) { $('#mcMsg').textContent = L('Marca al menos 2 sesiones.', 'Tick at least 2 sessions.'); return; }
   if (S.length > 20) { $('#mcMsg').textContent = L('Máximo 20 sesiones.', 'At most 20 sessions.'); return; }
   $('#mcMsg').textContent = L('Analizando…', 'Analyzing…'); setTimeout(() => { try { mcRender(S); } catch (err) { $('#mcMsg').textContent = L('No se pudo comparar: ', 'Could not compare: ') + err.message; } }, 30); };
-function mcRender(S) {
+function mcData(S) {
   const R = S.map(s => { const r = freshOf(s), w = MODAPTS.wasteOf(r), by = {}; w.l1.forEach(x => by[x.k] = x.s); const nPut = (r.elements || []).filter(e => /P\d|X\d/.test(e.code || '')).length;
-    return { s, name: s.name, per: s.person || s.name, met: s.method || '—', T: w.T, S: w.S, ideal: w.ideal, by, w, nPut }; });
-  const med = R.map(x => x.nPut).sort((a, b) => a - b)[R.length >> 1] || 1, odd = R.filter(x => Math.abs(x.nPut - med) / med > 0.35);
-  const maxT = Math.max(...R.map(x => x.T), 1), K = ['pace', 'layout', 'extra', 'hand', 'body'], seg = (v, c) => `<div style="width:${v / maxT * 100}%;background:${c}"></div>`;
-  const rk = R.slice().sort((a, b) => a.T - b.T);
+    return { name: s.name, date: s.date, per: s.person || s.name, met: s.method || '—', T: w.T, S: w.S, ideal: w.ideal, by, ratio: w.ratio, weak: w.weak, nPut }; });
+  const med = R.map(x => x.nPut).sort((a, b) => a - b)[R.length >> 1] || 1, odd = R.filter(x => Math.abs(x.nPut - med) / med > 0.35).map(x => x.name);
+  const G = {}; R.forEach(x => (G[x.met] = G[x.met] || []).push(x)); const avg = (a, f) => a.reduce((p, x) => p + f(x), 0) / a.length;
+  const M = Object.entries(G).map(([m, a]) => ({ m, a, S: avg(a, x => x.S), lay: avg(a, x => x.by.layout || 0) })).sort((a, b) => a.S - b.S), best = M[0];
+  const P = best.a.slice().sort((a, b) => a.T / a.S - b.T / b.S);
+  const wh = R.slice().sort((a, b) => (b.by.hand || 0) - (a.by.hand || 0))[0], wb = R.slice().sort((a, b) => (b.by.body || 0) - (a.by.body || 0))[0];
+  return { R, rk: R.slice().sort((a, b) => a.T - b.T), M, best, P, goal: Math.min(...best.a.map(x => x.T)), now: avg(R, x => x.T), wh: (wh.by.hand || 0) >= 2 ? wh : null, wb: (wb.by.body || 0) >= 2 ? wb : null, odd, date: new Date().toISOString() }; }
+function mcTexts(D, es) { const f = (v, d) => (+v).toFixed(d), b = D.best, last = D.M[D.M.length - 1];
+  return { methodNote: D.M.length > 1 ? (es ? `El método ${b.m} tiene ${f(last.S - b.S, 1)} s menos de MODs que ${last.m}: es de la estación, no de la persona.` : `Method ${b.m} has ${f(last.S - b.S, 1)} s fewer MODs than ${last.m}: it comes from the station, not the person.`) : '',
+    concl: (D.M.length > 1 ? (es ? `Estándar recomendado: método ${b.m} (${f(b.S, 1)} s de MODs). ` : `Recommended standard: method ${b.m} (${f(b.S, 1)} s of MODs). `) : '') + (es ? `Con el ritmo de la mejor sesión de ese método, el objetivo realista es ${f(D.goal, 0)} s contra ${f(D.now, 0)} s del promedio de estas sesiones.` : `With the pace of the best session of that method, the realistic target is ${f(D.goal, 0)} s against ${f(D.now, 0)} s, the average of these sessions.`)
+      + (D.wh ? (es ? ` Revisar el uso de manos de ${D.wh.per} (${f(D.wh.by.hand, 1)} s).` : ` Review the hand use of ${D.wh.per} (${f(D.wh.by.hand, 1)} s).`) : '') + (D.wb ? (es ? ` Revisar la altura y posición de la estación para ${D.wb.per} (${f(D.wb.by.body, 1)} s de cuerpo).` : ` Review the station height and position for ${D.wb.per} (${f(D.wb.by.body, 1)} s of body).`) : ''),
+    odd: D.odd.length ? (es ? 'Ojo: estas sesiones tienen un número de colocaciones muy distinto al resto y quizá no son la misma tarea: ' : 'Careful: these sessions have a very different number of placements and may not be the same task: ') + D.odd.join(', ') : '',
+    slow: x => x.ratio[x.weak] - x.ratio[x.weak === 'L' ? 'R' : 'L'] > 0.15 ? (x.weak === 'L' ? (es ? 'izquierda lenta' : 'left slow') : (es ? 'derecha lenta' : 'right slow')) : '' }; }
+function mcRender(S) { const D = mcData(S), T = mcTexts(D, LANG() === 'es'); MC.last = D; $('#mcPdf').disabled = false;
+  const maxT = Math.max(...D.R.map(x => x.T), 1), K = ['pace', 'layout', 'extra', 'hand', 'body'], seg = (v, c) => `<div style="width:${v / maxT * 100}%;background:${c}"></div>`, hl = i => i === 0 ? ' style="background:rgba(79,209,139,.12)"' : '';
   let h = `<h3 style="margin:14px 0 4px">${L('Ranking por tiempo real', 'Ranking by real time')}</h3><p class="note">${['ideal', ...K].map(k => `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${WS_C[k]};margin:0 4px 0 10px"></span>${k === 'ideal' ? L('tiempo ideal', 'ideal time') : wsName(k)}`).join('')}</p>
   <div class="tblwrap"><table><thead><tr><th>#</th><th>${L('Sesión', 'Session')}</th><th>${L('Persona', 'Person')}</th><th>${L('Método', 'Method')}</th><th style="min-width:200px">${L('Tiempo real, partido en desperdicios', 'Real time, split into waste')}</th><th>${L('Real', 'Real')}</th><th>MODs</th><th>${L('Real / MODs', 'Real / MODs')}</th></tr></thead><tbody>`
-    + rk.map((x, i) => `<tr${i === 0 ? ' style="background:rgba(79,209,139,.12)"' : ''}><td>${i + 1}</td><td>${esc(x.name)}</td><td>${esc(x.per)}</td><td>${esc(x.met)}</td><td><div class="wsst">${seg(x.ideal, WS_C.ideal) + K.map(k => seg(x.by[k] || 0, WS_C[k])).join('')}</div></td><td><b>${fmt(x.T, 1)} s</b></td><td>${fmt(x.S, 1)} s</td><td>${Math.round(x.T / (x.S || 1) * 100)} %</td></tr>`).join('') + '</tbody></table></div>';
-  const G = {}; R.forEach(x => (G[x.met] = G[x.met] || []).push(x)); const avg = (a, f) => a.reduce((p, x) => p + f(x), 0) / a.length;
-  const M = Object.entries(G).map(([m, a]) => ({ m, a, S: avg(a, x => x.S), lay: avg(a, x => x.by.layout || 0), body: avg(a, x => x.by.body || 0) })).sort((a, b) => a.S - b.S), best = M[0];
+    + D.rk.map((x, i) => `<tr${hl(i)}><td>${i + 1}</td><td>${esc(x.name)}</td><td>${esc(x.per)}</td><td>${esc(x.met)}</td><td><div class="wsst">${seg(x.ideal, WS_C.ideal) + K.map(k => seg(x.by[k] || 0, WS_C[k])).join('')}</div></td><td><b>${fmt(x.T, 1)} s</b></td><td>${fmt(x.S, 1)} s</td><td>${Math.round(x.T / (x.S || 1) * 100)} %</td></tr>`).join('') + '</tbody></table></div>';
   h += `<div class="grid2" style="margin-top:12px"><div><h3>${L('Mejor método (MODs, sin importar quién)', 'Best method (MODs, whoever did it)')}</h3><div class="tblwrap"><table><thead><tr><th>${L('Método', 'Method')}</th><th>${L('MODs promedio', 'Average MODs')}</th><th>${wsName('layout')}</th><th>${L('Sesiones', 'Sessions')}</th></tr></thead><tbody>`
-    + M.map((x, i) => `<tr${i === 0 ? ' style="background:rgba(79,209,139,.12)"' : ''}><td>${esc(x.m)}</td><td><b>${fmt(x.S, 1)} s</b></td><td>${fmt(x.lay, 1)} s</td><td>${x.a.length}</td></tr>`).join('') + '</tbody></table></div>'
-    + (M.length > 1 ? `<p class="note">${L(`El método ${esc(best.m)} tiene ${fmt(M[M.length - 1].S - best.S, 1)} s menos de MODs que ${esc(M[M.length - 1].m)}: es de la estación, no de la persona.`, `Method ${esc(best.m)} has ${fmt(M[M.length - 1].S - best.S, 1)} s fewer MODs than ${esc(M[M.length - 1].m)}: it comes from the station, not the person.`)}</p>` : '') + '</div>';
-  const P = best.a.slice().sort((a, b) => a.T / a.S - b.T / b.S);
-  h += `<div><h3>${L('Mejor ritmo dentro del método ', 'Best pace within method ')}${esc(best.m)}</h3><div class="tblwrap"><table><thead><tr><th>${L('Persona', 'Person')}</th><th>${L('Real / MODs', 'Real / MODs')}</th><th>${wsName('hand')}</th><th>${wsName('body')}</th></tr></thead><tbody>`
-    + P.map((x, i) => `<tr${i === 0 ? ' style="background:rgba(79,209,139,.12)"' : ''}><td>${esc(x.per)}</td><td><b>${Math.round(x.T / (x.S || 1) * 100)} %</b></td><td>${fmt(x.by.hand || 0, 1)} s${x.w.ratio[x.w.weak] - x.w.ratio[x.w.weak === 'L' ? 'R' : 'L'] > 0.15 ? ' · ' + (x.w.weak === 'L' ? L('izquierda lenta', 'left slow') : L('derecha lenta', 'right slow')) : ''}</td><td>${fmt(x.by.body || 0, 1)} s</td></tr>`).join('') + '</tbody></table></div></div></div>';
-  const goal = Math.min(...best.a.map(x => x.T)), now = avg(R, x => x.T), wh = R.slice().sort((a, b) => (b.by.hand || 0) - (a.by.hand || 0))[0], wb = R.slice().sort((a, b) => (b.by.body || 0) - (a.by.body || 0))[0];
-  const tips = []; if ((wh.by.hand || 0) >= 2) tips.push(L(`Revisar el uso de manos de ${esc(wh.per)} (${fmt(wh.by.hand, 1)} s).`, `Review the hand use of ${esc(wh.per)} (${fmt(wh.by.hand, 1)} s).`)); if ((wb.by.body || 0) >= 2) tips.push(L(`Revisar la altura y posición de la estación para ${esc(wb.per)} (${fmt(wb.by.body, 1)} s de cuerpo).`, `Review the station height and position for ${esc(wb.per)} (${fmt(wb.by.body, 1)} s of body).`));
-  h += `<h3 style="margin-top:12px">${L('Conclusión', 'Conclusion')}</h3><p style="margin:0;line-height:1.5">${M.length > 1 ? L(`Estándar recomendado: <b>método ${esc(best.m)}</b> (${fmt(best.S, 1)} s de MODs). `, `Recommended standard: <b>method ${esc(best.m)}</b> (${fmt(best.S, 1)} s of MODs). `) : ''}${L(`Con el ritmo de la mejor sesión de ese método, el objetivo realista es <b>${fmt(goal, 0)} s</b> contra ${fmt(now, 0)} s del promedio de estas sesiones.`, `With the pace of the best session of that method, the realistic target is <b>${fmt(goal, 0)} s</b> against ${fmt(now, 0)} s, the average of these sessions.`)} ${tips.join(' ')}</p>`
-    + (odd.length ? `<p class="note warn">${L('Ojo: estas sesiones tienen un número de colocaciones muy distinto al resto y quizá no son la misma tarea: ', 'Careful: these sessions have a very different number of placements and may not be the same task: ')}${odd.map(x => esc(x.name)).join(', ')}</p>` : '');
-  $('#mcOut').innerHTML = h; $('#mcMsg').textContent = R.length + L(' sesiones comparadas.', ' sessions compared.'); }
+    + D.M.map((x, i) => `<tr${hl(i)}><td>${esc(x.m)}</td><td><b>${fmt(x.S, 1)} s</b></td><td>${fmt(x.lay, 1)} s</td><td>${x.a.length}</td></tr>`).join('') + '</tbody></table></div>' + (T.methodNote ? `<p class="note">${esc(T.methodNote)}</p>` : '') + '</div>';
+  h += `<div><h3>${L('Mejor ritmo dentro del método ', 'Best pace within method ')}${esc(D.best.m)}</h3><div class="tblwrap"><table><thead><tr><th>${L('Persona', 'Person')}</th><th>${L('Real / MODs', 'Real / MODs')}</th><th>${wsName('hand')}</th><th>${wsName('body')}</th></tr></thead><tbody>`
+    + D.P.map((x, i) => `<tr${hl(i)}><td>${esc(x.per)}</td><td><b>${Math.round(x.T / (x.S || 1) * 100)} %</b></td><td>${fmt(x.by.hand || 0, 1)} s${T.slow(x) ? ' · ' + T.slow(x) : ''}</td><td>${fmt(x.by.body || 0, 1)} s</td></tr>`).join('') + '</tbody></table></div></div></div>';
+  h += `<h3 style="margin-top:12px">${L('Conclusión', 'Conclusion')}</h3><p style="margin:0;line-height:1.5">${esc(T.concl).replace(/(método|method) ([^ (]+) \(/, '$1 <b>$2</b> (').replace(/(es|is) (\d+ s) (contra|against)/, '$1 <b>$2</b> $3')}</p>` + (T.odd ? `<p class="note warn">${esc(T.odd)}</p>` : '');
+  $('#mcOut').innerHTML = h; $('#mcMsg').textContent = D.R.length + L(' sesiones comparadas.', ' sessions compared.'); }
+$('#mcPdf').onclick = () => { if (!MC.last) return; if (!window.jspdf || !window.__pdf.multiPDF) { msg(L('No cargó la librería PDF', 'The PDF library did not load')); return; }
+  const lg = $('#mcPdfLang').value || LANG(), doc = window.__pdf.multiPDF(MC.last, mcTexts(MC.last, lg === 'es'), lg); dl(doc.output('blob'), 'MODAPTS_comparar_' + MC.last.R.length + '_sesiones_' + lg + '.pdf'); };
 // --- indicadores de una sesión, analizada con el motor actual (sin tocar la sesión guardada)
 function freshOf(s, model) {
   if (!s.raw) return s.result;
