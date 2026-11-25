@@ -65,7 +65,7 @@ button.glcode:hover,button.glcode.on{background:var(--panel2)}button.glcode.on{o
 <body>
 <div class="wrap">
 <header>
-  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.8.0</span></h1><div class="sub" data-t="sub"></div></div>
+  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.8.1</span></h1><div class="sub" data-t="sub"></div></div>
   <div class="row"><button class="sm" id="langBtn" title="Idioma / Language">EN</button><button class="sm" id="theme" data-t="theme"></button></div>
 </header>
 
@@ -414,53 +414,57 @@ function conclusions(r,lang,sess){
   if(obs>0&&!(sess&&sess.calib)){const v=vaOf(r,sess);out.push(es?`Valor agregado: VA ${f1(v.va)} s (${v.pVa} %) colocar, presionar y fijar · NVA necesario ${f1(v.nec)} s (${v.pNec} %) alcanzar, tomar y trasladar · NVA desperdicio ${f1(v.waste)} s (${v.pWaste} %) pausas, movimientos lentos, reacomodos, caminar y agacharse. Las recomendaciones de abajo atacan el desperdicio y el NVA necesario.`
     :`Value added: VA ${f1(v.va)} s (${v.pVa} %) placing, pressing and fastening · NVA necessary ${f1(v.nec)} s (${v.pNec} %) reaching, grasping and carrying · NVA waste ${f1(v.waste)} s (${v.pWaste} %) pauses, slow moves, regrasps, walking and bending. The recommendations below attack the waste and the necessary NVA.`);recStart=out.length;}
   // 2. recomendaciones con ahorro estimado; se ordenan de mayor a menor
-  const recs=[],MW={rea:0,p5:0,far:0,body:0,hold:0};let pot=0;const rec=(s,txtEs,txtEn,mods)=>{if(s>0.05){recs.push({s,t:es?txtEs:txtEn});if(mods)pot+=mods;}};
+  const recs=[],MW={rea:0,p5:0,far:0,body:0,hold:0};let pot=0,SH=null;const sh=(tE,tN,wE,wN,aE,aN,els)=>({t:es?tE:tN,w:es?wE:wN,a:es?aE:aN,els:els||[]});const rec=(s,txtEs,txtEn,mods)=>{if(s>0.05){recs.push({s,t:es?txtEs:txtEn,sh:SH});if(mods)pot+=mods;}SH=null;};
   if(obs>0&&ms/obs<0.7){
-    if(I.gaps.length){const lst=I.gaps.slice(0,5).map(g=>f1(g[0])+'-'+f1(g[1])+' s').join(', ');
+    if(I.gaps.length){SH=sh('Pausas largas','Long pauses',`${I.gaps.length} de más de 2 s, manos quietas`,`${I.gaps.length} over 2 s, both hands still`,'Instrucción visual o kit en orden','Visual instruction or kit in order');const lst=I.gaps.slice(0,5).map(g=>f1(g[0])+'-'+f1(g[1])+' s').join(', ');
       rec(I.long,`Pausas largas: ${I.gaps.length} momentos de más de 2 s con las dos manos quietas (${lst}; ${f1(I.long)} s en total). Suele ser pensar qué sigue o buscar la pieza: fijar la secuencia de armado con una instrucción visual o un kit en orden. Si en esos momentos estaba presionando para encajar, agregar X4 en la tabla. Ahorro aprox. ${f1(I.long)} s.`,
         `Long pauses: ${I.gaps.length} moments over 2 s with both hands still (${lst}; ${f1(I.long)} s in total). Usually deciding what comes next or looking for the part: fix the assembly sequence with a visual instruction or a kit in order. If the operator was pressing to fit parts at those moments, add X4 in the table. Saves about ${f1(I.long)} s.`);}
     const shortIdle=I.idle-I.long;
-    if(shortIdle>2)rec(shortIdle*0.5,`Pausas cortas entre movimientos: ${f1(shortIdle)} s repartidos en muchas esperas de menos de 2 s. Con práctica en el Dojo (repetir el ciclo hasta hacerlo sin pensar) y las dos manos trabajando a la vez se reducen; meta realista: la mitad, unos ${f1(shortIdle*0.5)} s.`,
+    SH=sh('Pausas cortas','Short pauses',`${f1(shortIdle)} s en esperas de menos de 2 s`,`${f1(shortIdle)} s in waits under 2 s`,'Práctica en el Dojo, las dos manos a la vez','Practice in the Dojo, both hands at once');if(shortIdle>2)rec(shortIdle*0.5,`Pausas cortas entre movimientos: ${f1(shortIdle)} s repartidos en muchas esperas de menos de 2 s. Con práctica en el Dojo (repetir el ciclo hasta hacerlo sin pensar) y las dos manos trabajando a la vez se reducen; meta realista: la mitad, unos ${f1(shortIdle*0.5)} s.`,
       `Short pauses between moves: ${f1(shortIdle)} s spread over many waits under 2 s. Practice in the Dojo (repeating the cycle until it is automatic) and both hands working at once reduce them; realistic target: half, about ${f1(shortIdle*0.5)} s.`);
     const manip=AC?Math.max(0,I.busy-I.coded):0;
-    if(manip>2)rec(manip*0.5,`Pieza en la mano sin avanzar: ${f1(manip)} s con una mano ocupada (sosteniendo o ajustando) sin movimiento codificado. Si estaba presionando para encajar, agregar X4 en la tabla; si dudaba, practicar la secuencia en el Dojo hasta hacerla sin pensar. Meta realista: la mitad, unos ${f1(manip*0.5)} s.`,
+    SH=sh('Pieza en la mano sin avanzar','Part in hand, no progress',`${f1(manip)} s sosteniendo o ajustando`,`${f1(manip)} s holding or adjusting`,'Practicar la secuencia en el Dojo (si presionaba: X4)','Practice the sequence in the Dojo (if pressing: X4)');if(manip>2)rec(manip*0.5,`Pieza en la mano sin avanzar: ${f1(manip)} s con una mano ocupada (sosteniendo o ajustando) sin movimiento codificado. Si estaba presionando para encajar, agregar X4 en la tabla; si dudaba, practicar la secuencia en el Dojo hasta hacerla sin pensar. Meta realista: la mitad, unos ${f1(manip*0.5)} s.`,
       `Part in hand without progress: ${f1(manip)} s with a hand busy (holding or adjusting) and no coded movement. If the operator was pressing to fit, add X4 in the table; if hesitating, practice the sequence in the Dojo until it is automatic. Realistic target: half, about ${f1(manip*0.5)} s.`);
     const slow=I.coded-theoHands-sum(e=>e.hand==='B')*0.129;
-    if(slow>2)rec(slow*0.5,`Movimientos lentos: los movimientos codificados duraron ${f1(I.coded)} s para un trabajo que vale ${f1(theoHands)} s en MODAPTS (MODs de las manos, sin cuerpo). Es falta de práctica o cuidado de más; con repeticiones baja. Ahorro aprox. ${f1(slow*0.5)} s.`,
+    SH=sh('Movimientos lentos','Slow moves',`${f1(I.coded)} s para ${f1(theoHands)} s de trabajo`,`${f1(I.coded)} s for ${f1(theoHands)} s of work`,'Repetición: baja con la práctica','Repetition: it drops with practice');if(slow>2)rec(slow*0.5,`Movimientos lentos: los movimientos codificados duraron ${f1(I.coded)} s para un trabajo que vale ${f1(theoHands)} s en MODAPTS (MODs de las manos, sin cuerpo). Es falta de práctica o cuidado de más; con repeticiones baja. Ahorro aprox. ${f1(slow*0.5)} s.`,
       `Slow moves: the coded moves lasted ${f1(I.coded)} s for work worth ${f1(theoHands)} s in MODAPTS (hand MODs, without body). It is lack of practice or excess care; it drops with repetition. Saves about ${f1(slow*0.5)} s.`);}
   // reacomodo de la pieza en la mano: 3 o más movimientos cortos seguidos (M1/M2 sin agarrar) de la misma mano
   for(const h of ['L','R']){const hs=E.filter(e=>e.hand===h).sort((a,b)=>a.t0-b.t0);let run=[];const runs=[];const flush=()=>{if(run.length>=3)runs.push(run);run=[];};
     for(const e of hs){if(/^(M[12](P0)?|J2)$/.test(e.code)){if(run.length&&e.t0-run[run.length-1].t1>1.5)flush();run.push(e);}else if(!/^R0$/.test(e.code))flush();}flush();
     if(runs.length){const all=runs.flat(),m=all.reduce((a,e)=>a+(e.eff??e.mods),0),_mw=(MW.rea+=m),hn=es?(h==='L'?'izquierda':'derecha'):(h==='L'?'left':'right');
-      rec(m*0.129,`Reacomodo de la pieza en la mano ${hn}: ${runs.length} ${runs.length>1?'veces':'vez'} hizo 3 o más movimientos cortos seguidos, ${all.length} en total${rowsTxt(all)}. Es girar o ajustar la pieza para ver cómo entra. Presentar las piezas ya orientadas en su charola los elimina: unos ${m} MODs (${sec(m)} s).`,
+      SH=sh(`Reacomodo en la mano ${hn}`,`Turning the part, ${hn} hand`,`${all.length} movimientos cortos seguidos`,`${all.length} short moves in a row`,'Piezas presentadas ya orientadas','Parts presented already oriented',all);rec(m*0.129,`Reacomodo de la pieza en la mano ${hn}: ${runs.length} ${runs.length>1?'veces':'vez'} hizo 3 o más movimientos cortos seguidos, ${all.length} en total${rowsTxt(all)}. Es girar o ajustar la pieza para ver cómo entra. Presentar las piezas ya orientadas en su charola los elimina: unos ${m} MODs (${sec(m)} s).`,
         `Repositioning the part in the ${hn} hand: ${runs.length} ${runs.length>1?'times':'time'} it made 3 or more short moves in a row, ${all.length} in total${rowsTxt(all)}. That is turning or adjusting the part to see how it fits. Presenting parts already oriented in their tray removes them: about ${m} MODs (${sec(m)} s).`,m);}}
   // balance de manos: una mano trabaja mucho menos (sostiene)
   // sostener: una mano pasa mucho tiempo sosteniendo la pieza (medido en los cuadros): soporte o fixture
   if(AC&&!(sess&&sess.calib)){const dur=r.duration||1;for(const h of ['L','R']){const hd=AC[h].hold;if(hd>=0.3*dur&&hd>=5){const o=h==='L'?'R':'L',mOther=sum(e=>e.hand===o&&/^M\d+G/.test(e.code)),save=Math.round(mOther*0.4);MW.hold=Math.max(MW.hold,save);
-    rec(Math.max(save*0.129,0.1),`La mano ${h==='L'?'izquierda':'derecha'} pasó ${f1(hd)} s sosteniendo la pieza (${Math.round(100*hd/dur)} % del tiempo). Sostener no suma MODs pero ocupa una mano: un soporte o fixture la libera para tomar la siguiente pieza mientras la otra coloca (los movimientos simultáneos no suman). Ahorro aprox. ${save} MODs (${sec(save)} s) y menos fatiga.`,
+    SH=sh(`Mano ${h==='L'?'izquierda':'derecha'} sosteniendo`,`${h==='L'?'Left':'Right'} hand holding`,`${f1(hd)} s (${Math.round(100*hd/dur)} % del tiempo)`,`${f1(hd)} s (${Math.round(100*hd/dur)} % of the time)`,'Soporte o fixture','Holder or fixture');rec(Math.max(save*0.129,0.1),`La mano ${h==='L'?'izquierda':'derecha'} pasó ${f1(hd)} s sosteniendo la pieza (${Math.round(100*hd/dur)} % del tiempo). Sostener no suma MODs pero ocupa una mano: un soporte o fixture la libera para tomar la siguiente pieza mientras la otra coloca (los movimientos simultáneos no suman). Ahorro aprox. ${save} MODs (${sec(save)} s) y menos fatiga.`,
       `The ${h==='L'?'left':'right'} hand spent ${f1(hd)} s holding the part (${Math.round(100*hd/dur)} % of the time). Holding adds no MODs but ties up a hand: a holder or fixture frees it to get the next part while the other one places (simultaneous moves do not add). Saves about ${save} MODs (${sec(save)} s) and reduces fatigue.`,save);}}}
   {const nL=E.filter(e=>e.hand==='L'&&e.mods>0).length,nR=E.filter(e=>e.hand==='R'&&e.mods>0).length,lo=nL<nR?'L':'R',a=Math.min(nL,nR),b=Math.max(nL,nR);
     if(!AC&&b>=6&&a<0.5*b&&!(sess&&sess.calib)){const mOther=sum(e=>e.hand===(lo==='L'?'R':'L')&&/^M\d+G/.test(e.code)),save=Math.round(mOther*0.4);
-      rec(save*0.129,`Mano ${lo==='L'?'izquierda':'derecha'} poco usada: ${a} elementos contra ${b} de la otra; probablemente solo sostenía el armado. Un soporte o fixture que sostenga la pieza libera esa mano para tomar la siguiente pieza al mismo tiempo (los movimientos simultáneos no suman). Ahorro aprox. ${save} MODs (${sec(save)} s).`,
+      SH=sh(`Mano ${lo==='L'?'izquierda':'derecha'} poco usada`,`${lo==='L'?'Left':'Right'} hand underused`,`${a} elementos contra ${b}`,`${a} elements vs ${b}`,'Soporte o fixture','Holder or fixture');rec(save*0.129,`Mano ${lo==='L'?'izquierda':'derecha'} poco usada: ${a} elementos contra ${b} de la otra; probablemente solo sostenía el armado. Un soporte o fixture que sostenga la pieza libera esa mano para tomar la siguiente pieza al mismo tiempo (los movimientos simultáneos no suman). Ahorro aprox. ${save} MODs (${sec(save)} s).`,
         `${lo==='L'?'Left':'Right'} hand underused: ${a} elements versus ${b} for the other; it was probably just holding the assembly. A holder or fixture frees that hand to get the next part at the same time (simultaneous moves do not add). Saves about ${save} MODs (${sec(save)} s).`,save);}}
-  const p5=E.filter(e=>/P5/.test(e.code));rec(p5.length*3*0.129,`${p5.length} ${p5.length>1?'posicionamientos exactos':'posicionamiento exacto'} (P5)${rowsTxt(p5)}. Guías, chaflanes o un tope que alinee la pieza ${p5.length>1?'los bajan':'lo baja'} a P2: unos ${p5.length*3} MODs (${sec(p5.length*3)} s).`,`${p5.length} exact placement${p5.length>1?'s':''} (P5)${rowsTxt(p5)}. Guides, chamfers or a stop that aligns the part lower them to P2: about ${p5.length*3} MODs (${sec(p5.length*3)} s).`,p5.length*3);
+  const p5=E.filter(e=>/P5/.test(e.code));SH=sh('Posicionamientos exactos (P5)','Precise placements (P5)',`${p5.length} veces`,`${p5.length} times`,'Guías, chaflanes o un tope','Guides, chamfers or a stop',p5);rec(p5.length*3*0.129,`${p5.length} ${p5.length>1?'posicionamientos exactos':'posicionamiento exacto'} (P5)${rowsTxt(p5)}. Guías, chaflanes o un tope que alinee la pieza ${p5.length>1?'los bajan':'lo baja'} a P2: unos ${p5.length*3} MODs (${sec(p5.length*3)} s).`,`${p5.length} exact placement${p5.length>1?'s':''} (P5)${rowsTxt(p5)}. Guides, chamfers or a stop that aligns the part lower them to P2: about ${p5.length*3} MODs (${sec(p5.length*3)} s).`,p5.length*3);
   MW.p5=p5.length*3;
-  const g3=E.filter(e=>/G3/.test(e.code));rec(g3.length*2*0.129,`${g3.length} ${g3.length>1?'agarres':'agarre'} con atención (G3)${rowsTxt(g3)}. Presentar las piezas separadas y orientadas los baja a G1: unos ${g3.length*2} MODs.`,`${g3.length} grasp${g3.length>1?'s':''} with attention (G3)${rowsTxt(g3)}. Presenting parts separated and oriented lowers them to G1: about ${g3.length*2} MODs.`,g3.length*2);
+  const g3=E.filter(e=>/G3/.test(e.code));SH=sh('Agarres con atención (G3)','Careful grasps (G3)',`${g3.length} veces`,`${g3.length} times`,'Piezas separadas y orientadas','Parts separated and oriented',g3);rec(g3.length*2*0.129,`${g3.length} ${g3.length>1?'agarres':'agarre'} con atención (G3)${rowsTxt(g3)}. Presentar las piezas separadas y orientadas los baja a G1: unos ${g3.length*2} MODs.`,`${g3.length} grasp${g3.length>1?'s':''} with attention (G3)${rowsTxt(g3)}. Presenting parts separated and oriented lowers them to G1: about ${g3.length*2} MODs.`,g3.length*2);
   const far=E.filter(e=>/^M[57]/.test(e.code)&&(e.eff??e.mods)>0),farSave=far.reduce((a,e)=>a+(/^M7/.test(e.code)?4:2),0);
-  rec(farSave*0.129,`${far.length} ${far.length>1?'alcances largos':'alcance largo'} (M5/M7)${rowsTxt(far)}. Acercar ese material a menos de 30 cm (M3/M4): unos ${farSave} MODs.`,`${far.length} long reach${far.length>1?'es':''} (M5/M7)${rowsTxt(far)}. Move that material within 30 cm (M3/M4): about ${farSave} MODs.`,farSave);
+  SH=sh('Alcances largos (M5/M7)','Long reaches (M5/M7)',`${far.length} veces`,`${far.length} times`,'Material a menos de 30 cm','Material within 30 cm',far);rec(farSave*0.129,`${far.length} ${far.length>1?'alcances largos':'alcance largo'} (M5/M7)${rowsTxt(far)}. Acercar ese material a menos de 30 cm (M3/M4): unos ${farSave} MODs.`,`${far.length} long reach${far.length>1?'es':''} (M5/M7)${rowsTxt(far)}. Move that material within 30 cm (M3/M4): about ${farSave} MODs.`,farSave);
   MW.far=farSave;
-  const b17=sum(e=>/^B17/.test(e.code));rec(b17*0.129,`Agacharse (B17) suma ${b17} MODs (${pct(b17)} %). Subir el material a la altura de la cintura lo elimina y además reduce el riesgo ergonómico.`,`Bending (B17) adds ${b17} MODs (${pct(b17)} %). Raising the material to waist height removes it and also reduces ergonomic risk.`,b17);
+  const b17=sum(e=>/^B17/.test(e.code));SH=sh('Agacharse (B17)','Bending (B17)',`${b17} MODs`,`${b17} MODs`,'Material a la altura de la cintura','Material at waist height',E.filter(e=>/^B17/.test(e.code)));rec(b17*0.129,`Agacharse (B17) suma ${b17} MODs (${pct(b17)} %). Subir el material a la altura de la cintura lo elimina y además reduce el riesgo ergonómico.`,`Bending (B17) adds ${b17} MODs (${pct(b17)} %). Raising the material to waist height removes it and also reduces ergonomic risk.`,b17);
   const w=sum(e=>/^W5/.test(e.code)),steps=E.filter(e=>/^W5/.test(e.code)).reduce((a,e)=>a+(+((/x(\d+)/.exec(e.code)||[0,1])[1])),0);
-  rec(w*0.129,`Caminó ${steps} pasos (${w} MODs, ${pct(w)} %). Acercar materiales y herramientas al punto de uso.`,`Walked ${steps} steps (${w} MODs, ${pct(w)} %). Bring materials and tools to the point of use.`,w);
+  SH=sh('Caminar','Walking',`${steps} pasos, ${pct(w)} % de los MODs`,`${steps} steps, ${pct(w)} % of the MODs`,'Material y herramientas en el punto de uso','Material and tools at the point of use',E.filter(e=>/^W5/.test(e.code)));rec(w*0.129,`Caminó ${steps} pasos (${w} MODs, ${pct(w)} %). Acercar materiales y herramientas al punto de uso.`,`Walked ${steps} steps (${w} MODs, ${pct(w)} %). Bring materials and tools to the point of use.`,w);
   MW.body=b17+w;
   recs.sort((a,b)=>b.s-a.s).forEach(x=>out.push(x.t));
+  // v1.8.1: versión corta para el PDF (tabla al final) y columna Rec del Excel
+  const short=recs.filter(x=>x.sh).slice(0,6).map(x=>Object.assign({},x.sh,{s:x.s,save:'~'+(x.s<10?x.s.toFixed(1):Math.round(x.s))+' s'}));
   // 3. ergonomía, variación y rastreo
   const g=r.ergo||{},D=g.disp,up=(g.aboveShoulder?.L.count||0)+(g.aboveShoulder?.R.count||0);
   if(D&&D.zones[2]>0){const dn=[[es?'adelante':'forward',D.fwd],[es?'abajo':'down',D.down],[es?'de lado':'sideways',Math.abs(D.side)]].sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0][0];
     out.push(es?`Ergonomía: el cuerpo se alejó más de ${D.red} cm de su eje durante ${D.zones[2]} s (máx. ${D.max} cm, sobre todo hacia ${dn}). Acercar el trabajo al operador para que no tenga que inclinarse.`:`Ergonomics: the body moved more than ${D.red} cm from its axis for ${D.zones[2]} s (max ${D.max} cm, mainly ${dn}). Bring the work closer so the operator does not have to lean.`);}
   else if(D&&D.zones[1]>0.25*(obs||1))out.push(es?`Ergonomía: ${D.zones[1]} s entre ${D.green} y ${D.red} cm fuera del eje (${D.exits} salidas). Revisar la distancia a las piezas.`:`Ergonomics: ${D.zones[1]} s between ${D.green} and ${D.red} cm off the axis (${D.exits} exits). Check the distance to the parts.`);
+  {const lean=D&&D.zones[2]>0?D.zones[2]:0;if(lean>0||up>0)short.push({t:es?'Ergonomía':'Ergonomics',w:[lean>0?(es?`inclinado ${f1(lean/60)} min`:`leaning ${f1(lean/60)} min`):'',up>0?(es?`${up} manos arriba del hombro`:`${up} hands above shoulder`):''].filter(Boolean).join(', '),a:es?'Acercar el trabajo y bajar la altura':'Bring the work closer and lower it',save:es?'riesgo':'risk',els:[]});}
   if(up>0)out.push(es?`Manos arriba del hombro ${up} veces: bajar la altura de trabajo o de los materiales.`:`Hands above the shoulder ${up} times: lower the work or material height.`);
   if(X.cy.length>=3){const d=X.cy.map(c=>c.dur),a=d.reduce((p,q)=>p+q,0)/d.length,rg=Math.max(...d)-Math.min(...d);
+    if(rg>0.2*a)short.push({t:es?'Variación entre ciclos':'Cycle variation',w:`${Math.min(...d).toFixed(1)}-${Math.max(...d).toFixed(1)} s`,a:es?'Estandarizar método y materiales':'Standardize method and materials',save:'-',els:[]});
     if(rg>0.2*a)out.push(es?`Variación entre ciclos: de ${Math.min(...d).toFixed(1)} a ${Math.max(...d).toFixed(1)} s (rango ${Math.round(100*rg/a)} % del promedio). Estandarizar el método y la presentación de materiales.`:`Cycle-to-cycle variation: from ${Math.min(...d).toFixed(1)} to ${Math.max(...d).toFixed(1)} s (range ${Math.round(100*rg/a)} % of the average). Standardize the method and material presentation.`);}
   const trk=r.tracking||{L:100,R:100};if(Math.min(trk.L,trk.R)<85)out.push(es?`El rastreo de manos fue bajo (izq. ${trk.L} %, der. ${trk.R} %): validar los códigos con la repetición 3D antes de usar este análisis.`:`Hand tracking was low (left ${trk.L} %, right ${trk.R} %): validate the codes with the 3D replay before using this analysis.`);
   pot=Math.min(pot,tot);
@@ -468,7 +472,8 @@ function conclusions(r,lang,sess){
   else if(!recs.length)out.push(es?'No se ven desperdicios evidentes de método en esta sesión.':'No obvious method waste in this session.');
   const V=(obs>0&&ms>0&&!(sess&&sess.calib))?verdictOf(r,sess,lang,{X,I,MW,obs,ms}):null;
   if(V){out.unshift(V.text+(V.why.length?' '+V.why.join(' '):''));recStart++;}else if(actTxt){out.unshift(actTxt);recStart++;}
-  return {items:out,potential:pot,idle:I,recStart,verdict:V,actTxt};
+  const recOf=new Map();short.forEach((x,i)=>x.els.forEach(e=>recOf.set(e.id,(recOf.has(e.id)?recOf.get(e.id)+', ':'')+(i+1))));
+  return {items:out,potential:pot,idle:I,recStart,verdict:V,actTxt,short,recOf,trk};
 }
 /* v1.4: veredicto (cronómetro contra MODs) y el porqué en segundos, sin contar doble: cada segundo del cronómetro va a una sola causa */
 function verdictOf(r,sess,lang,o){const es=lang==='es',f1=v=>(+v).toFixed(1),{X,I,MW,obs,ms}=o,gap=obs-ms,ratio=obs/ms;
@@ -612,12 +617,8 @@ function waterfallImg(steps,lang){const es=lang==='es',W=1800,H=640,cv=document.
     for(const wd of words){const t=cur?cur+' '+wd:wd;if(g.measureText(t).width>bw-10&&cur){lines.push(cur);cur=wd;}else cur=t;}if(cur)lines.push(cur);lines.slice(0,3).forEach((l,k)=>g.fillText(l,x+w/2,Y(0)+10+k*25));});
   return {url:cv.toDataURL('image/png'),w:W,h:H};}
 function conclPages(doc,r,lang,sess,C,PW,M,CW,t){const es=lang==='es',V=C.verdict,f1=v=>(+v).toFixed(1);doc.addPage();let y=16;
-  doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(t.concl,M,y);y+=5;
-  if(V){const col={over:[224,71,63],equal:[31,158,115],under:[224,138,30]}[V.cls],bg={over:[252,236,235],equal:[232,246,240],under:[252,242,228]}[V.cls];
-    doc.setFont('helvetica','bold');doc.setFontSize(10.5);const tl=doc.splitTextToSize(V.text,CW-10),bh=8+tl.length*4.6;
-    doc.setFillColor(...bg);doc.rect(M,y,CW,bh,'F');doc.setFillColor(...col);doc.rect(M,y,2.2,bh,'F');
-    doc.setFontSize(7.5);doc.setTextColor(...col);doc.text(es?'VEREDICTO':'VERDICT',M+6,y+4.5);doc.setFontSize(10.5);doc.setTextColor(20,32,43);doc.text(tl,M+6,y+9.5);y+=bh+3;
-    if(V.why.length){doc.setFont('helvetica','normal');doc.setFontSize(8.8);for(const w of V.why){const l=doc.splitTextToSize(w,CW-4);doc.text(l,M+2,y+3);y+=l.length*3.9+1;}}
+  doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(es?'Análisis':'Analysis',M,y);y+=5;
+  if(V){
     // por qué
     y+=6;doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(es?'¿Por qué? · De dónde sale cada segundo del cronómetro':'Why? · Where each second of the stopwatch comes from',M,y);y+=2;
     const im=waterfallImg(V.steps,lang),ih=CW*im.h/im.w;doc.addImage(im.url,'PNG',M,y,CW,ih);y+=ih+1;
@@ -637,10 +638,42 @@ function conclPages(doc,r,lang,sess,C,PW,M,CW,t){const es=lang==='es',V=C.verdic
     const segs=[[v.va,'#1f9e73',es?'VA (agrega valor)':'VA (value added)'],[v.nec,'#8b96a1',es?'NVA necesario':'NVA necessary'],[v.waste,'#e0473f',es?'NVA desperdicio':'NVA waste']],tot=v.va+v.nec+v.waste||1;let x=M;
     for(const [s,c] of segs){const w=CW*s/tot;if(w<=0)continue;doc.setFillColor(...hexRGB(c));doc.rect(x,y,w,6.5,'F');if(w>14){doc.setTextColor(255);doc.setFontSize(8);doc.text(`${f1(s)} s · ${Math.round(100*s/tot)} %`,x+w/2,y+4.4,{align:'center'});}x+=w;}doc.setTextColor(20,32,43);y+=9.5;
     let lx=M;doc.setFont('helvetica','normal');doc.setFontSize(7.5);segs.forEach(([s,c,lab])=>{doc.setFillColor(...hexRGB(c));doc.rect(lx,y-2.6,3,3,'F');doc.text(lab,lx+4,y);lx+=doc.getTextWidth(lab)+10;});y+=6;}
-  // recomendaciones
-  const recs=C.items.slice(C.recStart??1);if(recs.length){if(y>240){doc.addPage();y=16;}doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(es?'Recomendaciones':'Recommendations',M,y);y+=1.5;
-    doc.autoTable({startY:y,margin:{left:M,right:M,bottom:16},theme:'plain',styles:{fontSize:8.8,cellPadding:{top:1.2,bottom:1.2,left:1,right:1},textColor:[20,32,43]},
-      columnStyles:{0:{cellWidth:6,fontStyle:'bold',textColor:[31,158,115]}},body:recs.map((c,i)=>[String(i+1)+'.',c])});y=doc.lastAutoTable.finalY+6;}
+  return y;}
+/* v1.8.1: hoja final = veredicto + potencial + recomendaciones cortas (tabla) + notas de método */
+function finalPage(doc,r,lang,sess,C,PW,M,CW,t,mlLines){const es=lang==='es',V=C.verdict,f1=v=>(+v).toFixed(1),fN=v=>Math.round(v).toLocaleString('en-US');doc.addPage();let y=18;
+  doc.setFont('helvetica','bold');doc.setFontSize(15);doc.text(es?'CONCLUSIONES Y RECOMENDACIONES':'CONCLUSIONS AND RECOMMENDATIONS',M,y);y+=7;
+  if(V){const col={over:[224,71,63],equal:[31,158,115],under:[224,138,30]}[V.cls],bg={over:[252,236,235],equal:[232,246,240],under:[252,242,228]}[V.cls];
+    doc.setFont('helvetica','bold');doc.setFontSize(10.5);const tl=doc.splitTextToSize(V.text,CW-10);doc.setFont('helvetica','normal');doc.setFontSize(8.8);const wl=V.why.length?doc.splitTextToSize(V.why.join(' '),CW-10):[];
+    const bh=9+tl.length*4.6+wl.length*3.9;doc.setFillColor(...bg);doc.rect(M,y,CW,bh,'F');doc.setFillColor(...col);doc.rect(M,y,2.2,bh,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...col);doc.text(es?'VEREDICTO':'VERDICT',M+6,y+4.5);doc.setFontSize(10.5);doc.setTextColor(20,32,43);doc.text(tl,M+6,y+9.5);
+    if(wl.length){doc.setFont('helvetica','normal');doc.setFontSize(8.8);doc.setTextColor(60,72,84);doc.text(wl,M+6,y+9.5+tl.length*4.6);doc.setTextColor(20,32,43);}y+=bh+5;}
+  // potencial
+  const tot=r.totalMods||0,pot=C.potential||0,cards=[];
+  if(pot>0)cards.push([`-${fN(pot)} MODs`,es?'potencial de mejora':'improvement potential'],[`-${Math.round(100*pot/(tot||1))} %`,es?'de los MODs':'of the MODs'],[`-${fN(pot*0.129)} s`,es?'de tiempo estándar':'of standard time']);
+  if(obs0(r,sess)){const v=vaOf(r,sess);cards.push([`VA ${v.pVa} %`,es?'valor agregado del tiempo real':'value added of the real time']);}
+  if(cards.length){const gap=4,w=(CW-gap*(cards.length-1))/cards.length;cards.forEach((c,i)=>{const x=M+i*(w+gap);doc.setFillColor(238,242,245);doc.roundedRect(x,y,w,17,2,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text(c[0],x+4,y+8);doc.setFont('helvetica','normal');doc.setFontSize(7.8);doc.setTextColor(93,107,120);doc.text(c[1],x+4,y+13.5);doc.setTextColor(20,32,43);});y+=23;}
+  // recomendaciones cortas
+  const S=C.short||[];
+  if(S.length){doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(es?'Recomendaciones (por segundos ahorrados)':'Recommendations (by seconds saved)',M,y);y+=2;
+    doc.autoTable({startY:y,margin:{left:M,right:M,bottom:30},theme:'plain',head:[['',es?'Qué pasa':'What happens',es?'Acción':'Action',es?'Ahorra':'Saves']],
+      body:S.map((x,i)=>[String(i+1),{content:x.t+'\n'+x.w},x.a,x.save]),
+      styles:{fontSize:9,cellPadding:{top:1.8,bottom:1.8,left:1.6,right:1.6},textColor:[20,32,43],lineColor:[221,227,232],lineWidth:{bottom:0.2}},
+      headStyles:{fillColor:[20,32,43],textColor:255,fontSize:8.5,lineWidth:0},
+      columnStyles:{0:{cellWidth:7,fontStyle:'bold',textColor:[93,107,120]},1:{cellWidth:CW*0.42},3:{cellWidth:20,halign:'right',fontStyle:'bold',textColor:[31,120,90]}},
+      didParseCell:d=>{if(d.section==='head'&&d.column.index===3)d.cell.styles.halign='right';},
+      didDrawCell:d=>{if(d.section==='body'&&d.column.index===1){const x=S[d.row.index];/* título en negritas sobre la descripción */
+        doc.setFillColor(255,255,255);doc.rect(d.cell.x+0.3,d.cell.y+0.3,d.cell.width-0.6,d.cell.height-0.6,'F');doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(20,32,43);
+        const tl=doc.splitTextToSize(x.t,d.cell.width-3.2);doc.text(tl,d.cell.x+1.6,d.cell.y+4.6);doc.setFont('helvetica','normal');doc.setTextColor(60,72,84);doc.text(doc.splitTextToSize(x.w,d.cell.width-3.2),d.cell.x+1.6,d.cell.y+4.6+tl.length*3.9);doc.setTextColor(20,32,43);}}});
+    y=doc.lastAutoTable.finalY+4;}
+  else{doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.text(es?'No se ven desperdicios evidentes de método en esta sesión.':'No obvious method waste in this session.',M,y+4);y+=10;}
+  doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(93,107,120);
+  const notes=[];if(S.some(x=>x.els.length))notes.push(es?'Los movimientos de cada recomendación están marcados en el Excel, columna "Rec".':'The moves behind each recommendation are flagged in the Excel, column "Rec".');
+  const trk=C.trk;if(trk&&Math.min(trk.L,trk.R)<85)notes.push(es?`Rastreo izq. ${trk.L} % / der. ${trk.R} %: confirmar los códigos con la repetición 3D antes de actuar.`:`Tracking left ${trk.L} % / right ${trk.R} %: confirm the codes with the 3D replay before acting.`);
+  for(const n of notes){const l=doc.splitTextToSize(n,CW);if(y>258){doc.addPage();y=18;}doc.text(l,M,y+3);y+=l.length*3.8+0.6;}doc.setTextColor(20,32,43);y+=4;
+  // notas de método al pie
+  if(mlLines&&mlLines.length){doc.setFontSize(7.4);const L=mlLines.map(l=>doc.splitTextToSize(l,CW));const h=L.reduce((a,l)=>a+l.length*3.2+0.8,0)+3;let yy=264-h;if(yy<y){doc.addPage();yy=18;}
+    doc.setDrawColor(221,227,232);doc.line(M,yy,M+CW,yy);yy+=3.5;doc.setTextColor(93,107,120);for(const l of L){doc.text(l,M,yy);yy+=l.length*3.2+0.8;}doc.setTextColor(20,32,43);y=yy;}
   return y;}
 function hexRGB(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
 function obs0(r,sess){return times(r,sess).obs>0&&!(sess&&sess.calib);}
@@ -680,7 +713,10 @@ async function makePDF(sess,lang){
   y+=19;
   // línea de tiempo
   doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(t.tl,M,y+3);y+=5;
-  const th=CW*300/1600;doc.addImage(timelineImg(r,lang),'PNG',M,y,CW,th);y+=th+4;
+  const th=CW*300/1600;doc.addImage(timelineImg(r,lang),'PNG',M,y,CW,th);y+=th+1;
+  {const es=lang==='es',lg=[['#3fa2ff',es?'Mover':'Move'],['#2fbf8f',es?'Mover + agarrar':'Move + get'],['#f39c38',es?'Mover + colocar':'Move + put'],['#7d8a97',es?'Soltar':'Release'],['#a67cff',es?'Caminar':'Walk'],['#22c3c9',es?'Mirar':'Eye use'],['#ef5b5b',es?'Agacharse':'Bend']];
+    let lx=M;doc.setFont('helvetica','normal');doc.setFontSize(7.4);lg.forEach(([c,l])=>{doc.setFillColor(...hexRGB(c));doc.rect(lx,y,3,3,'F');doc.text(l,lx+4,y+2.5);lx+=doc.getTextWidth(l)+8;});
+    doc.setTextColor(93,107,120);doc.text(es?'Tenue = simultáneo (no suma)':'Faded = simultaneous (not counted)',lx,y+2.5);doc.setTextColor(20,32,43);y+=7;}
   // foto de la repetición + ergonomía lado a lado
   let snap=null;
   if(sess.raw&&sess.raw.length>1&&window.__replay&&window.__replay.snapshot){
@@ -710,11 +746,9 @@ async function makePDF(sess,lang){
   // v1.4: en lugar del detalle movimiento por movimiento (queda en el Excel), Pareto en dos niveles y uso de las manos
   const C=conclusions(r,lang,sess);y=conclPages(doc,r,lang,sess,C,PW,M,CW,t);
   // método de cálculo en 3 renglones (la tabla completa sale en la pantalla) y el modelo que decidió las terminaciones
-  {const es=lang==='es',ml=r.ml,lines=[es?'Método: MODs de cada elemento = suma de los números del código (M4G1 = 4 + 1 = 5). Actual MODs = MODs × 0.129 s; actual cronómetro = del INICIO al TERMINAR, medido por el visor.':'Method: MODs per element = sum of the code numbers (M4G1 = 4 + 1 = 5). Actual MODs = MODs × 0.129 s; actual stopwatch = from START to FINISH, measured by the headset.',
+  const mlLines=(()=>{const es=lang==='es',ml=r.ml;return [es?'Método: MODs de cada elemento = suma de los números del código (M4G1 = 4 + 1 = 5). Actual MODs = MODs × 0.129 s; actual cronómetro = del INICIO al TERMINAR, medido por el visor.':'Method: MODs per element = sum of the code numbers (M4G1 = 4 + 1 = 5). Actual MODs = MODs × 0.129 s; actual stopwatch = from START to FINISH, measured by the headset.',
       es?'Las dos manos a la vez: solo cuenta la mayor (*); si las dos son de alto control (G3, P2, P5) cuentan las dos y la mayor baja a M2 (**). Norma MODAPTS, IMA 2017.':'Both hands at once: only the larger counts (*); if both are high control (G3, P2, P5) both count and the larger drops to M2 (**). MODAPTS standard, IMA 2017.',
-      ml?(es?`Terminaciones (P0, P2, P5) decididas por el modelo de machine learning v${ml.v} (${ml.n} ejemplos revisados con video): ${ml.P2+ml.P5} colocaciones, ${ml.none} tramos de ruido juntados, ${ml.kept} dudosas marcadas "probable".`:`Terminations (P0, P2, P5) decided by machine learning model v${ml.v} (${ml.n} examples reviewed on video): ${ml.P2+ml.P5} placements, ${ml.none} noise segments merged, ${ml.kept} uncertain ones flagged "probable".`):(es?'Terminaciones (P0, P2, P5) por las reglas del motor, sin modelo de machine learning.':'Terminations (P0, P2, P5) by the engine rules, without the machine learning model.')];
-    doc.setFont('helvetica','normal');doc.setFontSize(7.6);doc.setTextColor(93,107,120);let L=lines.map(l=>doc.splitTextToSize(l,CW));const h=L.reduce((a,l)=>a+l.length*3.3+1,0);if(y+h>262){doc.addPage();y=18;}
-    for(const l of L){doc.text(l,M,y);y+=l.length*3.3+1;}doc.setTextColor(20,32,43);y+=4;}
+      ml?(es?`Terminaciones (P0, P2, P5) decididas por el modelo de machine learning v${ml.v} (${ml.n} ejemplos revisados con video): ${ml.P2+ml.P5} colocaciones, ${ml.none} tramos de ruido juntados, ${ml.kept} dudosas marcadas "probable".`:`Terminations (P0, P2, P5) decided by machine learning model v${ml.v} (${ml.n} examples reviewed on video): ${ml.P2+ml.P5} placements, ${ml.none} noise segments merged, ${ml.kept} uncertain ones flagged "probable".`):(es?'Terminaciones (P0, P2, P5) por las reglas del motor, sin modelo de machine learning.':'Terminations (P0, P2, P5) by the engine rules, without the machine learning model.')].filter(Boolean);})();
   {const yw=wastePages(doc,r,lang,sess,M,CW);y=yw||y;}
   {const yy=paretoPages(doc,r,lang,PW,M,CW);y=yy||y;}
   // ciclos
@@ -723,6 +757,8 @@ async function makePDF(sess,lang){
     doc.text(t.cySum(X.cy.length,a.toFixed(1),Math.min(...d).toFixed(1),Math.max(...d).toFixed(1)),PW-M,y,{align:'right'});doc.setTextColor(20,32,43);
     doc.autoTable({startY:y+2,margin:{left:M,right:M,bottom:16},theme:'grid',head:[t.cyCols],body:X.cy.map(c=>[String(c.i),c.t0.toFixed(1)+' s',c.t1.toFixed(1)+' s',c.dur.toFixed(1)+' s',String(c.mods),c.theo.toFixed(1)+' s']),
       styles:{fontSize:8,cellPadding:1.3,halign:'center',lineColor:[200,207,214]},headStyles:{fillColor:[20,32,43],textColor:255}});y=doc.lastAutoTable.finalY+8;}
+  // v1.8.1: conclusiones y recomendaciones al final
+  y=finalPage(doc,r,lang,sess,C,PW,M,CW,t,mlLines);
   // hoja de calibración (si la sesión es una prueba de calibración)
   if(sess.calib&&window.__calib){const v=withLang(lang,()=>window.__calib.evaluate(sess));if(v){const ar=x=>String(x).replace(/\s*→\s*/g,lang==='es'?' a ':' to ');v.rows=v.rows.map(x=>Object.assign({},x,{ideal:ar(x.ideal),app:ar(x.app)}));doc.addPage();let yy=18;
     doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text(lang==='es'?'CALIBRACIÓN DEL SISTEMA DE MEDICIÓN':'MEASUREMENT SYSTEM CALIBRATION',M,yy);yy+=6;
@@ -2206,7 +2242,7 @@ window.__video={get offset(){return cur&&cur.videoOffset},el:vd,ready:vidReady};
 /* ---- exportar ---- */
 const fname=ext=>(cur.name||L('sesion','session')).replace(/[^\w\-]+/g,'_')+'_MODAPTS.'+ext;
 function dl(blob,name){try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);msg(L('Descargando ','Downloading ')+name);}catch(e){msg(L('Este visor no permite descargas: usa “Copiar tabla”.','This viewer does not allow downloads: use “Copy table”.'));}}
-function rows(){return cur.result.elements.map((e,i)=>({'#':i+1,[L('Mano','Hand')]:handName(e.hand),[L('Inicio (s)','Start (s)')]:+fmt(e.t0,2),[L('Fin (s)','End (s)')]:+fmt(e.t1,2),[L('Código','Code')]:e.code,MODs:e.mods,[L('MOD efectivos','Effective MODs')]:e.eff??e.mods,[L('Nota','Note')]:e.eff===0&&e.mods>0?L('Simultáneo: no suma','Simultaneous: not counted'):e.reduced?L('Simultáneo alto control: M→M2','Simultaneous high control: M→M2'):'',[L('Distancia (cm)','Distance (cm)')]:e.dist?Math.round(e.dist*100):''}));}
+function rows(){const RO=window.__pdf?window.__pdf.conclusions(cur.result,LANG(),cur).recOf:new Map();return cur.result.elements.map((e,i)=>({'#':i+1,[L('Mano','Hand')]:handName(e.hand),[L('Inicio (s)','Start (s)')]:+fmt(e.t0,2),[L('Fin (s)','End (s)')]:+fmt(e.t1,2),[L('Código','Code')]:e.code,MODs:e.mods,[L('MOD efectivos','Effective MODs')]:e.eff??e.mods,[L('Nota','Note')]:e.eff===0&&e.mods>0?L('Simultáneo: no suma','Simultaneous: not counted'):e.reduced?L('Simultáneo alto control: M→M2','Simultaneous high control: M→M2'):'',[L('Distancia (cm)','Distance (cm)')]:e.dist?Math.round(e.dist*100):'',Rec:RO.get(e.id)||''}));}
 function summaryRows(){const r=cur.result,g=r.ergo||{},D=g.disp||{},cy=cyclesOf(cur),d=cy.map(c=>c.dur);return [[L('Sesión','Session'),cur.name],[L('Fecha','Date'),new Date(cur.date).toLocaleString()],[L('Postura','Posture'),cur.posture==='sit'?L('Sentado','Seated'):L('De pie','Standing')],
   [L('Actual cronómetro (s)','Actual stopwatch (s)'),+fmt(r.duration,1)],[L('Actual MODs','Actual MODs'),r.totalMods],[L('Actual MODs (s) = MODs × 0.129','Actual MODs (s) = MODs × 0.129'),+fmt(theoOf(cur),1)],
   ...(window.__pdf?window.__pdf.defs(LANG()).map(d=>[L('Definición','Definition'),d]):[]),
@@ -2222,7 +2258,7 @@ $('#bPdf').onclick=async()=>{if(!window.jspdf||!window.__pdf){msg(L('No cargó l
 $('#pdfLang').value=LANG();try{const pl=localStorage.getItem('modapts_pdflang');if(pl)$('#pdfLang').value=pl;}catch(e){}
 $('#bXlsx').onclick=()=>{if(!window.XLSX){msg(L('No cargó la librería de Excel; usa CSV.','The Excel library did not load; use CSV.'));return;}
   const wb=XLSX.utils.book_new();const s1=XLSX.utils.aoa_to_sheet([[L('Concepto','Item'),L('Valor','Value')],...summaryRows()]);s1['!cols']=[{wch:32},{wch:26}];
-  const s2=XLSX.utils.json_to_sheet(rows());s2['!cols']=[{wch:5},{wch:8},{wch:10},{wch:10},{wch:10},{wch:7},{wch:16},{wch:14}];
+  const s2=XLSX.utils.json_to_sheet(rows());s2['!cols']=[{wch:5},{wch:8},{wch:10},{wch:10},{wch:10},{wch:7},{wch:16},{wch:14},{wch:12},{wch:6}];
   XLSX.utils.book_append_sheet(wb,s1,L('Resumen','Summary'));XLSX.utils.book_append_sheet(wb,s2,L('Elementos','Elements'));
   const s3=XLSX.utils.json_to_sheet(cyclesOf(cur).map(c=>({[L('Ciclo','Cycle')]:c.i,[L('Inicio (s)','Start (s)')]:+fmt(c.t0,2),[L('Fin (s)','End (s)')]:+fmt(c.t1,2),[L('Actual cronómetro (s)','Actual stopwatch (s)')]:+fmt(c.dur,2),MODs:c.mods,[L('Actual MODs (s)','Actual MODs (s)')]:+fmt(c.theo,1)})));XLSX.utils.book_append_sheet(wb,s3,L('Ciclos','Cycles'));
   try{const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});dl(new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),fname('xlsx'));}catch(e){msg(L('Error al generar Excel','Error creating Excel'));}};
