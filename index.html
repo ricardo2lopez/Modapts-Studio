@@ -65,7 +65,7 @@ button.glcode:hover,button.glcode.on{background:var(--panel2)}button.glcode.on{o
 <body>
 <div class="wrap">
 <header>
-  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.8.1</span></h1><div class="sub" data-t="sub"></div></div>
+  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.8.2</span></h1><div class="sub" data-t="sub"></div></div>
   <div class="row"><button class="sm" id="langBtn" title="Idioma / Language">EN</button><button class="sm" id="theme" data-t="theme"></button></div>
 </header>
 
@@ -2601,11 +2601,12 @@ async function mlAutoSync(){const v0=$('#mlVd'),s=ML_UI.s;if(!s||!ML_UI.vurl)ret
     if(prev){let a=0;for(let i=0;i<cur.length;i++)a+=Math.abs(cur[i]-prev[i]);mot[k]=a/cur.length;}prev=cur;if(k%8===0)st.textContent=L('Sincronizando… ','Syncing… ')+Math.round(100*k/N)+' %';}}
   const E=ML_UI.r0.elements.filter(e=>e.code!=='R0'),T=Math.ceil((ML_UI.r0.duration||0)/step),sg=new Float32Array(T);for(const e of E)for(let k=Math.floor(e.t0/step);k<=Math.min(T-1,Math.floor(e.t1/step));k++)sg[k]=1;
   const corr=o=>{let n=0,sx=0,sy=0,sxx=0,syy=0,sxy=0;for(let k=0;k<T;k++){const j=k+o;if(j<1||j>=N)continue;const x=sg[k],y=mot[j];n++;sx+=x;sy+=y;sxx+=x*x;syy+=y*y;sxy+=x*y;}if(n<Math.max(20,0.7*T))return -9;const c=(sxy-sx*sy/n)/Math.sqrt(Math.max(1e-9,(sxx-sx*sx/n)*(syy-sy*sy/n)));return c;};
-  const dS=ML_UI.r0.duration||0,hiS=Math.min(120,Math.max(0,D-dS+2));let best={c:-10,o:0};for(let o=Math.round(-10/step);o<=Math.round(hiS/step);o++){const c=corr(o);if(c>best.c)best={c,o};}
-  if(best.c<-5){ML_UI.off=null;ML_UI.corr=null;s.videoOffset=null;save();mlSyncInfo();st.textContent=L('El video no cubre la sesión: debe empezar antes del INICIO y seguir hasta el final.','The video does not cover the session: it must start before START and run to the end.');return;}
+  const dS=ML_UI.r0.duration||0,hiS=Math.min(120,Math.max(0,D-0.95*dS+2)) /* v1.8.2: basta con que el video cubra el 95 % de la sesión */;let best={c:-10,o:0};for(let o=Math.round(-10/step);o<=Math.round(hiS/step);o++){const c=corr(o);if(c>best.c)best={c,o};}
+  if(best.c<-5){ML_UI.off=null;ML_UI.corr=null;s.videoOffset=null;save();mlSyncInfo();st.textContent=L('El video no cubre la sesión: debe empezar antes del INICIO y cubrir al menos el 95 % de la sesión.','The video does not cover the session: it must start before START and cover at least 95 % of the session.');return;}
   // afinar a 0.05 s interpolando alrededor del mejor desfase
   const c0=corr(best.o-1),c1=best.c,c2=corr(best.o+1),den=c0-2*c1+c2,fr=c0>-5&&c2>-5&&Math.abs(den)>1e-9?Math.max(-0.5,Math.min(0.5,0.5*(c0-c2)/den)):0;
   ML_UI.off=+((best.o+fr)*step).toFixed(2);ML_UI.corr=best.c;s.videoOffset=ML_UI.off;save();mlSyncInfo();mlShow();
+  {const tail=ML_UI.off+dS-D;if(tail>0.5)msg(L(`El video termina ${tail.toFixed(0)} s antes que la sesión: esos últimos movimientos salen en rojo.`,`The video ends ${tail.toFixed(0)} s before the session: those last movements show in red.`),5000);}
   if(best.c<0.3)msg(L('La coincidencia es baja: revisa con −0.1 / +0.1 que el video y las etiquetas caigan juntos.','Low match: check with −0.1 / +0.1 that the video and the labels line up.'),5000);}
 const ML_COL={J2:'#f08a24',C:'#e64fa0',U:'#a07850',hold:'#6b7f99',G1:'var(--e)',P2:'var(--acc)',P5:'var(--acc2)',X4:'var(--w)',P0:'var(--warn)',none:'var(--bad)'};
 const mlName=y=>({J2:L('la giró entre los dedos','turned it in the fingers'),C:L('giró o volteó algo','turned or flipped something'),U:L('usó una herramienta','used a tool'),hold:L('sujetó algo sin moverlo','held something still'),G1:L('tomó una pieza','grabbed a part'),P2:L('puso la pieza','placed the part'),P5:L('la acomodó con varios intentos','adjusted it with several tries'),X4:L('apretó la pieza','pressed the part'),P0:L('la soltó','let go of it'),none:L('solo se movió o se detuvo','only moved or paused')}[y]||y);
