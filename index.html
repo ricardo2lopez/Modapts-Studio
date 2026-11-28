@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MODAPTS Studio</title>
+<title>MODAPTS - World Class Manufacturing Studio</title>
 <style>
 :root{--bg:#0f1318;--panel:#171d24;--panel2:#1e262f;--line:#2b3642;--text:#e8edf2;--mute:#93a1b0;--acc:#2fbf8f;--acc2:#3fa2ff;--warn:#f0b429;--bad:#ef5b5b;--m:#3fa2ff;--g:#2fbf8f;--p:#f39c38;--r:#7d8a97;--b:#ef5b5b;--w:#a67cff;--e:#22c3c9}
 :root[data-theme="light"]{--bg:#f4f6f8;--panel:#fff;--panel2:#eef2f5;--line:#d5dce3;--text:#14202b;--mute:#5d6b78}
@@ -65,7 +65,7 @@ button.glcode:hover,button.glcode.on{background:var(--panel2)}button.glcode.on{o
 <body>
 <div class="wrap">
 <header>
-  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.8.6</span></h1><div class="sub" data-t="sub"></div></div>
+  <div><h1><b>MODAPTS</b> - World Class Manufacturing Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.8.7</span></h1><div class="sub" data-t="sub"></div></div>
   <div class="row"><button class="sm" id="langBtn" title="Idioma / Language">EN</button><button class="sm" id="theme" data-t="theme"></button></div>
 </header>
 
@@ -303,7 +303,7 @@ const T={
   meth:'MÉTODO DE CÁLCULO',methCols:['Concepto','Cómo se calcula','Esta sesión'],
   ops:'ANÁLISIS DE LAS OPERACIONES',cols:['#','Descripción mano izquierda','Código','MOD','Código','Descripción mano derecha'],body:'CUERPO',
   totM:'TOTAL MODs',totS:'ACTUAL MODs',simNote:'* Simultáneo: no suma (bajo control). ** Simultáneo de alto control: el movimiento mayor se reduce a M2.',
-  std:'MOVIMIENTOS ESTÁNDAR MODAPTS',concl:'CONCLUSIONES Y RECOMENDACIONES',footer:'MODAPTS Studio · 1 MOD = 0.129 s',page:'Página',src:'Origen',srcV:{quest:'Meta Quest',demo:'Demo simulada',import:'Importada'}},
+  std:'MOVIMIENTOS ESTÁNDAR MODAPTS',concl:'CONCLUSIONES Y RECOMENDACIONES',footer:'MODAPTS - World Class Manufacturing Studio · 1 MOD = 0.129 s',page:'Página',src:'Origen',srcV:{quest:'Meta Quest',demo:'Demo simulada',import:'Importada'}},
  en:{title:'MODAPTS ANALYSIS',station:'Station / operator',date:'Date',study:'Study No.',method:'Method',actual:'Current',modif:'Improved',analyst:'Analyst',sign:'Signature',sheet:'Sheet',of:'of',
   kpi:['Actual stopwatch','Actual MODs','MODs','Tracking left / right'],tl:'Timeline',lanes:['Left hand','Right hand','Body'],
   snap:'Largest displacement from axis',path:'Hand paths (whole session)',ergo:'Ergonomics',ergoRows:['Posture','Max displacement from axis','Exits from green zone (> 5 cm)','Time 0-5 / 5-15 / > 15 cm','Hands above shoulder','Reaches > 55 cm','Bends (B17)'],
@@ -312,7 +312,7 @@ const T={
   meth:'CALCULATION METHOD',methCols:['Item','How it is calculated','This session'],
   ops:'OPERATIONS ANALYSIS',cols:['#','Left hand description','Code','MOD','Code','Right hand description'],body:'BODY',
   totM:'TOTAL MODs',totS:'ACTUAL MODs',simNote:'* Simultaneous: not added (low control). ** Simultaneous high control: the larger move is reduced to M2.',
-  std:'MODAPTS STANDARD MOVEMENTS',concl:'CONCLUSIONS AND RECOMMENDATIONS',footer:'MODAPTS Studio · 1 MOD = 0.129 s',page:'Page',src:'Source',srcV:{quest:'Meta Quest',demo:'Simulated demo',import:'Imported'}}};
+  std:'MODAPTS STANDARD MOVEMENTS',concl:'CONCLUSIONS AND RECOMMENDATIONS',footer:'MODAPTS - World Class Manufacturing Studio · 1 MOD = 0.129 s',page:'Page',src:'Source',srcV:{quest:'Meta Quest',demo:'Simulated demo',import:'Imported'}}};
 
 const MOVE={es:{1:'Dedo (2.5 cm)',2:'Mano (5 cm)',3:'Antebrazo (15 cm)',4:'Brazo (30 cm)',5:'Brazo extendido (45 cm)',7:'Tronco (75 cm)'},
             en:{1:'Finger (2.5 cm)',2:'Hand (5 cm)',3:'Forearm (15 cm)',4:'Whole arm (30 cm)',5:'Extended arm (45 cm)',7:'Trunk (75 cm)'}};
@@ -791,7 +791,7 @@ async function makePDF(sess,lang){
 // v1.7.2: PDF del comparador de varias sesiones
 function multiPDF(D,T,lang){const {jsPDF}=window.jspdf,es=lang==='es',doc=new jsPDF({unit:'mm',format:'letter'}),PW=215.9,M=12,CW=PW-2*M,N=WSN[lang]||WSN.es,f1=v=>(+v).toFixed(1),K=['pace','layout','extra','hand','body'],IC=[61,74,88];let y;
   doc.setFillColor(20,32,43);doc.rect(0,0,PW,22,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(15);doc.text(es?'COMPARACIÓN DE SESIONES · MODAPTS':'SESSION COMPARISON · MODAPTS',M,13);
-  doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.text(`MODAPTS Studio · ${D.R.length} ${es?'sesiones':'sessions'} · 1 MOD = 0.129 s · `+new Date(D.date).toLocaleDateString(),M,18.5);doc.setTextColor(20,32,43);y=29;
+  doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.text(`MODAPTS - World Class Manufacturing Studio · ${D.R.length} ${es?'sesiones':'sessions'} · 1 MOD = 0.129 s · `+new Date(D.date).toLocaleDateString(),M,18.5);doc.setTextColor(20,32,43);y=29;
   doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(es?'Conclusión':'Conclusion',M,y);y+=4.5;doc.setFont('helvetica','normal');doc.setFontSize(9);const cl=doc.splitTextToSize(T.concl,CW);doc.text(cl,M,y);y+=cl.length*4.2+1;
   if(T.odd){doc.setFontSize(8);doc.setTextColor(176,110,0);const o=doc.splitTextToSize('! '+T.odd,CW);doc.text(o,M,y);y+=o.length*3.6+1;doc.setTextColor(20,32,43);}
   y+=3;doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(es?'Ranking por tiempo real':'Ranking by real time',M,y);y+=2;
@@ -816,12 +816,12 @@ function multiPDF(D,T,lang){const {jsPDF}=window.jspdf,es=lang==='es',doc=new js
     styles:{fontSize:7.4,cellPadding:1.1,lineColor:[210,216,222],halign:'right'},headStyles:{fillColor:[20,32,43],textColor:255,fontSize:7,halign:'center'},columnStyles:{0:{halign:'left'},1:{halign:'left'},2:{halign:'left'}}});
   y=doc.lastAutoTable.finalY+5;if(y>262){doc.addPage();y=16;}doc.setFont('helvetica','normal');doc.setFontSize(7.3);doc.setTextColor(93,107,120);
   doc.text(es?'Ritmo = tiempo real por encima de los MODs. Los otros cuatro = MODs que el método ideal no tendría (piezas al alcance M3, las dos manos a su MOD). Compara solo sesiones de la misma tarea. Norma MODAPTS, IMA 2017.':'Pace = real time above the MODs. The other four = MODs the ideal method would not have (parts within reach M3, both hands at their MOD). Compare only sessions of the same task. MODAPTS standard, IMA 2017.',M,y,{maxWidth:CW});
-  const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFontSize(7.5);doc.setTextColor(93,107,120);doc.text('MODAPTS Studio',M,272);doc.text((es?'Página ':'Page ')+i+(es?' de ':' of ')+n,PW-M,272,{align:'right'});}
+  const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFontSize(7.5);doc.setTextColor(93,107,120);doc.text('MODAPTS - World Class Manufacturing Studio',M,272);doc.text((es?'Página ':'Page ')+i+(es?' de ':' of ')+n,PW-M,272,{align:'right'});}
   return doc;}
 function comparePDF(C,table,concl,warns,lang){
   const {jsPDF}=window.jspdf,es=lang==='es',doc=new jsPDF({unit:'mm',format:'letter'}),PW=215.9,M=12,CW=PW-2*M;let y=14;
   doc.setFillColor(20,32,43);doc.rect(0,0,PW,22,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(15);doc.text(es?'COMPARACIÓN ANTES / DESPUÉS · MODAPTS':'BEFORE / AFTER COMPARISON · MODAPTS',M,13);
-  doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.text('MODAPTS Studio · 1 MOD = 0.129 s · '+new Date().toLocaleDateString(),M,18.5);doc.setTextColor(20,32,43);y=28;
+  doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.text('MODAPTS - World Class Manufacturing Studio · 1 MOD = 0.129 s · '+new Date().toLocaleDateString(),M,18.5);doc.setTextColor(20,32,43);y=28;
   const nm=s=>s.name+' · '+new Date(s.date).toLocaleDateString();
   doc.autoTable({startY:y,margin:{left:M,right:M},theme:'grid',styles:{fontSize:8.5,cellPadding:1.4,lineColor:[210,216,222]},columnStyles:{0:{fontStyle:'bold',cellWidth:38}},
     body:[[es?'Antes':'Before',nm(C.a)],[es?'Después':'After',nm(C.b)],[es?'Cambio realizado':'Change made',C.what||'—']]});y=doc.lastAutoTable.finalY+3;
@@ -3426,6 +3426,9 @@ const RP={
 };
 /* Trayectoria de las manos: toda la sesión, cada mano su madeja, clara al inicio y oscura al final.
    Punto trazado: nudillo del índice (el mismo que usa el motor). Vistas: arriba y de lado, cámara ortográfica. */
+const GZ_BACK = 0.10; // v1.8.7 Golden Zone (WCM WO Step 5): AA ≤ 40 cm y ±30°, A ≤ 40 cm, B 40-70 cm, C > 70 cm, D detrás del cuerpo
+function gzZone(r) { const d = Math.hypot(r[0], r[1]), ang = Math.atan2(Math.abs(r[0]), r[1]) * 180 / Math.PI; if (r[1] < -GZ_BACK) return 'D'; /* D solo si la mano queda > 10 cm detrás de la línea del cuerpo (el yaw sale de la cabeza) */ if (d <= 0.4) return ang <= 30 ? 'AA' : 'A'; if (d <= 0.7) return 'B'; return 'C'; }
+RP.gzZone = gzZone;
 RP.paths = function (opt) {
   opt = opt || {}; if (!P.raw) return null;
   const W = opt.w || 760, Hh = opt.h || 560, lang = opt.lang;
@@ -3470,8 +3473,29 @@ RP.paths = function (opt) {
   const hp0 = hN.clone(); const body = [hp0.clone().add(new THREE.Vector3(0, 0.15, 0)), hp0.clone().addScaledVector(fwd, -0.2), hp0.clone().addScaledVector(right, 0.28), hp0.clone().addScaledVector(right, -0.28), new THREE.Vector3(hp0.x, hp0.y - 0.7, hp0.z)];
   const old = { w: cv.width, h: cv.height, pr: R3.getPixelRatio(), bg: sc.background, fog: sc.fog };
   R3.setPixelRatio(1); R3.setSize(W, Hh, false); sc.fog = null;
-  const out = document.createElement('canvas'); const PAD = 46, HEAD = 92, FOOT = 52; out.width = W * 2 + PAD * 3; out.height = Hh + HEAD + FOOT + PAD; const g = out.getContext('2d');
+  const out = document.createElement('canvas'); const PAD = 46, HEAD = 92, FOOT = 150; out.width = W * 2 + PAD * 3; out.height = Hh + HEAD + FOOT + PAD; const g = out.getContext('2d');
   g.fillStyle = '#ffffff'; g.fillRect(0, 0, out.width, out.height);
+
+  // ---- v1.8.7 Golden Zone / Strike Zone (WCM) ----
+  const en0 = lang === 'en';
+  const cen = nk0.clone(); // cuello = origen del abanico (WCM: centro del operador)
+  const stand = P.s.posture !== 'sit';
+  const Hs = stand ? Math.max(1.45, Math.min(2.05, (P.h0 + 0.0) / 0.936)) : 1.72; // estatura estimada por altura de ojos
+  const eyeY = stand ? P.h0 : nk0.y + 0.11; const yShoulder = eyeY - 0.118 * Hs, yElbow = eyeY - 0.306 * Hs, yWaist = eyeY - 0.406 * Hs;
+  const zoneOf = p => { const dx = p[0] - cen.x, dz = p[2] - cen.z; const r = Math.hypot(dx, dz); const fw = dx * fwdN.x + dz * fwdN.z; const ang = Math.acos(Math.max(-1, Math.min(1, fw / Math.max(r, 1e-6)))) * 180 / Math.PI;
+    if (ang > 90) return 'D'; if (r <= 0.4) return ang <= 30 ? 'AA' : 'A'; if (r <= 0.7) return 'B'; return 'C'; };
+  const vzOf = y => y > yShoulder ? 'hi' : y >= yElbow - 0.10 && y <= yElbow + 0.05 ? 'pt' : y >= yWaist ? 'zn' : 'lo';
+  const near = (k, t) => { let best = null, bd = 1e9; for (const q of pts[k]) { if (!q) continue; const d = Math.abs(q.t - t); if (d < bd) { bd = d; best = q; } if (q.t > t + 0.2) break; } return best; };
+  // marco del cuerpo: origen = cuello (cabeza 9 cm atrás), orientación = yaw de cabeza suavizado ±1.5 s
+  const RF = P.raw, nF = RF.length, cs = [0], sn = [0]; for (let i = 0; i < nF; i++) { const y = RF[i].head.yaw || 0; cs.push(cs[i] + Math.cos(y)); sn.push(sn[i] + Math.sin(y)); }
+  const bodyAt = t => { let lo = 0, hi = nF - 1; while (lo < hi) { const m = (lo + hi) >> 1; if (RF[m].t < t) lo = m + 1; else hi = m; } let a = lo, b = lo; while (a > 0 && RF[a - 1].t > t - 1.5) a--; while (b < nF - 1 && RF[b + 1].t < t + 1.5) b++;
+    const yaw = Math.atan2(sn[b + 1] - sn[a], cs[b + 1] - cs[a]); const h = RF[lo].head.p; const fw = [Math.sin(yaw), -Math.cos(yaw)]; return { o: [h[0] - 0.09 * fw[0], h[2] - 0.09 * fw[1]], fw, rt: [-fw[1], fw[0]] }; };
+  const relOf = (pRaw, t) => { const B = bodyAt(t), dx = pRaw[0] - B.o[0], dz = pRaw[2] - B.o[1]; return [dx * B.rt[0] + dz * B.rt[1], dx * B.fw[0] + dz * B.fw[1]]; }; // [derecha, adelante]
+  const rawPts = { L: [], R: [] }; for (const f of RF) for (const k of ['L', 'R']) { const q = kn(f, k); rawPts[k].push(q ? { t: f.t, r: relOf(q, f.t), y: q[1] } : null); }
+  const zoneRel = gzZone;
+  const ZC = { AA: 0, A: 0, B: 0, C: 0, D: 0 }, VC = { pt: 0, zn: 0, hi: 0, lo: 0 }, reachPts = [];
+  for (const e of P.els) { if (!/^M\d/.test(e.move || e.code || '')) continue; const ks = e.hand === 'B' ? ['L', 'R'] : [e.hand]; for (const k of ks) { const f = RF.find(f => f.t >= e.t1); if (!f) continue; const q = kn(f, k); if (!q) continue; const r = relOf(q, f.t), z = zoneRel(r); ZC[z]++; VC[vzOf(q[1])]++; reachPts.push([r, z]); } }
+  const ZCOL = { AA: '#1f9d55', A: '#7cc576', B: '#f2c94c', C: '#f2994a', D: '#e5484d' };
   const views = [['top', lang === 'en' ? 'Top view' : 'Vista desde arriba'], ['side', lang === 'en' ? 'Side view' : 'Vista de lado']];
   const spans = {}; // tamaño del área dibujada por vista (para comparar dos sesiones a la misma escala)
   views.forEach(([v, title], vi) => {
@@ -3486,6 +3510,22 @@ RP.paths = function (opt) {
     if (v === 'top') { const yMid = (hp0.y) / 2; ctr.y = yMid; oc.position.copy(ctr).add(new THREE.Vector3(0, 6, 0)); oc.up.copy(fwd); oc.lookAt(ctr); }
     else { const d0 = hp0.clone().dot(right); ctr.addScaledVector(right, d0); oc.position.copy(ctr).addScaledVector(right, 6); oc.up.set(0, 1, 0); oc.lookAt(ctr); }
     oc.updateMatrixWorld(); oc.updateProjectionMatrix();
+    if (v === 'top') { const x0 = PAD, y0 = HEAD; const S = Math.min(W / 1.9, Hh / 1.25), cx = x0 + W / 2, cy = y0 + Hh * 0.80; const P2 = r => [cx + r[0] * S, cy - r[1] * S];
+      g.fillStyle = '#fff'; g.fillRect(x0, y0, W, Hh); g.save(); g.beginPath(); g.rect(x0, y0, W, Hh); g.clip();
+      const d = Math.PI / 180, base = -Math.PI / 2; const sector = (r0, r1, a0, a1, col) => { g.beginPath(); g.arc(cx, cy, r1 * S, base + a0, base + a1); g.arc(cx, cy, r0 * S, base + a1, base + a0, true); g.closePath(); g.fillStyle = col; g.fill(); };
+      sector(0.7, 3, -90 * d, 90 * d, 'rgba(242,153,74,0.16)'); sector(0.4, 0.7, -90 * d, 90 * d, 'rgba(242,201,76,0.24)'); sector(0, 0.4, -90 * d, 90 * d, 'rgba(124,197,118,0.26)'); sector(0, 0.4, -30 * d, 30 * d, 'rgba(31,157,85,0.30)'); sector(0, 3, 90 * d, 270 * d, 'rgba(229,72,77,0.12)');
+      g.setLineDash([8, 6]); g.strokeStyle = 'rgba(40,60,80,0.55)'; g.lineWidth = 1.5; for (const r of [0.4, 0.7]) { g.beginPath(); g.arc(cx, cy, r * S, Math.PI, 2 * Math.PI); g.stroke(); }
+      for (const a of [-30, 30]) { g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(a * d) * 0.4 * S, cy - Math.cos(a * d) * 0.4 * S); g.stroke(); } g.beginPath(); g.moveTo(x0, cy); g.lineTo(x0 + W, cy); g.stroke(); g.setLineDash([]);
+      // silueta del operador desde arriba
+      g.fillStyle = '#c9d1da'; g.beginPath(); g.ellipse(cx, cy + 0.04 * S, 0.22 * S, 0.11 * S, 0, 0, 7); g.fill(); g.fillStyle = '#aeb8c4'; g.beginPath(); g.arc(cx, cy + 0.02 * S, 0.085 * S, 0, 7); g.fill(); g.beginPath(); g.moveTo(cx - 0.02 * S, cy - 0.06 * S); g.lineTo(cx, cy - 0.09 * S); g.lineTo(cx + 0.02 * S, cy - 0.06 * S); g.fill();
+      g.lineCap = 'round'; const T = P.T || 1, sg = []; for (const k of ['L', 'R']) { const a = rawPts[k]; for (let i = 1; i < a.length; i++) if (a[i] && a[i - 1] && a[i].t - a[i - 1].t < 0.25) sg.push([a[i].t, k, a[i - 1].r, a[i].r]); } sg.sort((a, b) => a[0] - b[0]);
+      for (const [t, k, p1, p2] of sg) { const u = t / T, c = COL[k], dk = 0.18 + 0.82 * u, mix = cc => Math.round(255 + (cc - 255) * dk); g.strokeStyle = `rgba(${mix(c[0])},${mix(c[1])},${mix(c[2])},${0.25 + 0.5 * u})`; g.lineWidth = 1.2 + 1.2 * u; const a = P2(p1), b = P2(p2); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); }
+      for (const [r, z] of reachPts) if (z === 'C' || z === 'D') { const a = P2(r); g.lineWidth = 2; g.strokeStyle = '#b42318'; g.beginPath(); g.moveTo(a[0] - 5, a[1] - 5); g.lineTo(a[0] + 5, a[1] + 5); g.moveTo(a[0] + 5, a[1] - 5); g.lineTo(a[0] - 5, a[1] + 5); g.stroke(); }
+      g.font = 'bold 18px Helvetica, Arial'; g.fillStyle = 'rgba(27,38,51,0.8)'; const lab = (t, r, a) => { const q = P2([Math.sin(a * d) * r, Math.cos(a * d) * r]); g.fillText(t, q[0] - 10, q[1] + 6); };
+      lab('AA', 0.30, 0); lab('A', 0.32, 60); lab('A', 0.32, -60); lab('B', 0.56, 65); lab('B', 0.56, -65); lab('C', 0.85, 68); lab('C', 0.85, -68); lab('D', 0.33, 120); lab('D', 0.33, -120);
+      g.font = '15px Helvetica, Arial'; g.fillStyle = 'rgba(40,60,80,0.85)'; g.fillText('40 cm', cx + 0.4 * S - 22, cy + 18); g.fillText('70 cm', cx + 0.7 * S - 22, cy + 18); g.fillText('60°', cx - 12, cy - 0.42 * S);
+      g.restore(); g.strokeStyle = '#d5dce3'; g.lineWidth = 1; g.strokeRect(x0 + 0.5, y0 + 0.5, W - 1, Hh - 1); g.fillStyle = '#1b2633'; g.font = 'bold 24px Helvetica, Arial'; g.fillText(en0 ? 'Top view — relative to the operator (Golden Zone)' : 'Vista desde arriba — respecto al operador (Golden Zone)', x0, y0 - 12);
+      const px = 0.1 * S, sx = x0 + W - 20 - px, sy = y0 + Hh - 18; g.strokeStyle = '#3a4756'; g.lineWidth = 2; g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx + px, sy); g.stroke(); g.fillStyle = '#3a4756'; g.font = '18px Helvetica, Arial'; g.fillText('10 cm', sx + px / 2 - 24, sy - 10); return; }
     R3.render(sc, oc);
     const x0 = PAD + vi * (W + PAD), y0 = HEAD;
     g.drawImage(R3.domElement, 0, 0, W, Hh, x0, y0, W, Hh);
@@ -3494,6 +3534,34 @@ RP.paths = function (opt) {
     g.fillStyle = '#1b2633'; g.font = 'bold 24px Helvetica, Arial'; g.fillText(title, x0, y0 - 12);
     const proj = p => { const q = new THREE.Vector3(...p).project(oc); return [x0 + (q.x + 1) / 2 * W, y0 + (1 - q.y) / 2 * Hh]; };
     g.save(); g.beginPath(); g.rect(x0, y0, W, Hh); g.clip(); g.lineCap = 'round'; g.lineJoin = 'round';
+    if (v === 'top') { // abanico Golden Zone sobre el plano de la mesa
+      const c0 = proj(cen.toArray()), R = r => Math.abs(proj(cen.clone().addScaledVector(rgtN, r).toArray())[0] - c0[0]);
+      const fp = proj(cen.clone().addScaledVector(fwdN, 0.3).toArray()); const base = Math.atan2(fp[1] - c0[1], fp[0] - c0[0]);
+      const sector = (r0, r1, a0, a1, col) => { g.beginPath(); g.arc(c0[0], c0[1], R(r1), base + a0, base + a1); g.arc(c0[0], c0[1], R(r0), base + a1, base + a0, true); g.closePath(); g.fillStyle = col; g.fill(); };
+      const d = Math.PI / 180;
+      sector(0.7, 3, -90 * d, 90 * d, 'rgba(242,153,74,0.13)');
+      sector(0.4, 0.7, -90 * d, 90 * d, 'rgba(242,201,76,0.20)');
+      sector(0, 0.4, -90 * d, 90 * d, 'rgba(124,197,118,0.22)');
+      sector(0, 0.4, -30 * d, 30 * d, 'rgba(31,157,85,0.25)');
+      sector(0, 3, 90 * d, 270 * d, 'rgba(229,72,77,0.10)');
+      g.setLineDash([8, 6]); g.strokeStyle = 'rgba(40,60,80,0.55)'; g.lineWidth = 1.5;
+      for (const r of [0.4, 0.7]) { g.beginPath(); g.arc(c0[0], c0[1], R(r), base - Math.PI / 2, base + Math.PI / 2); g.stroke(); }
+      for (const a of [-30, 30]) { g.beginPath(); g.moveTo(c0[0], c0[1]); g.lineTo(c0[0] + Math.cos(base + a * d) * R(0.4), c0[1] + Math.sin(base + a * d) * R(0.4)); g.stroke(); }
+      g.beginPath(); g.moveTo(c0[0] + Math.cos(base - Math.PI / 2) * 2000, c0[1] + Math.sin(base - Math.PI / 2) * 2000); g.lineTo(c0[0] + Math.cos(base + Math.PI / 2) * 2000, c0[1] + Math.sin(base + Math.PI / 2) * 2000); g.stroke();
+      g.setLineDash([]); g.font = 'bold 17px Helvetica, Arial'; g.fillStyle = 'rgba(27,38,51,0.75)';
+      const lab = (t, r, a) => g.fillText(t, c0[0] + Math.cos(base + a * d) * R(r) - 10, c0[1] + Math.sin(base + a * d) * R(r) + 6);
+      lab('AA', 0.28, 0); lab('A', 0.30, 58); lab('A', 0.30, -58); lab('B', 0.56, 62); lab('B', 0.56, -62); lab('C', 0.84, 64); lab('C', 0.84, -64); lab('D', 0.28, 150);
+      g.font = '15px Helvetica, Arial'; g.fillStyle = 'rgba(40,60,80,0.8)';
+      g.fillText('40 cm', c0[0] + Math.cos(base + 82 * d) * R(0.4) + 4, c0[1] + Math.sin(base + 82 * d) * R(0.4));
+      g.fillText('70 cm', c0[0] + Math.cos(base + 82 * d) * R(0.7) + 4, c0[1] + Math.sin(base + 82 * d) * R(0.7));
+    } else { // bandas Strike Zone por altura
+      const yy = y => proj([cen.x, y, cen.z])[1];
+      const band = (y1, y2, col) => { const a = yy(y1), b = yy(y2); g.fillStyle = col; g.fillRect(x0, Math.min(a, b), W, Math.abs(b - a)); };
+      band(yShoulder, yShoulder + 2, 'rgba(229,72,77,0.10)'); band(yWaist, yShoulder, 'rgba(242,201,76,0.16)'); band(yElbow - 0.10, yElbow + 0.05, 'rgba(31,157,85,0.22)'); band(yWaist - 2, yWaist, 'rgba(229,72,77,0.10)');
+      g.setLineDash([8, 6]); g.strokeStyle = 'rgba(40,60,80,0.55)'; g.lineWidth = 1.5;
+      for (const [y, t] of [[yShoulder, en0 ? 'Shoulder' : 'Hombro'], [yElbow, en0 ? 'Elbow (strike point)' : 'Codo (strike point)'], [yWaist, en0 ? 'Waist' : 'Cintura']]) { const py = yy(y); g.beginPath(); g.moveTo(x0, py); g.lineTo(x0 + W, py); g.stroke(); g.font = '15px Helvetica, Arial'; g.fillStyle = 'rgba(27,38,51,0.8)'; { const tx = t + ' ' + Math.round(y * 100) + ' cm'; g.fillStyle = 'rgba(255,255,255,0.8)'; g.fillRect(x0 + W - 12 - g.measureText(tx).width - 4, py - 21, g.measureText(tx).width + 8, 19); g.fillStyle = 'rgba(27,38,51,0.9)'; g.fillText(tx, x0 + W - 12 - g.measureText(tx).width, py - 6); } }
+      g.setLineDash([]);
+    }
     // mezcla las dos manos en orden de tiempo para que lo último quede encima
     const T = P.T || 1, segs = [];
     for (const k of ['L', 'R']) { const a = pts[k]; for (let i = 1; i < a.length; i++) if (a[i] && a[i - 1]) segs.push([a[i].t, k, a[i - 1].p, a[i].p]); }
@@ -3506,6 +3574,7 @@ RP.paths = function (opt) {
     for (const k of ['L', 'R']) { const a = pts[k].filter(Boolean); if (!a.length) continue; const s = proj(a[0].p), e = proj(a[a.length - 1].p), c = COL[k];
       g.lineWidth = 2.5; g.strokeStyle = `rgb(${c})`; g.fillStyle = '#fff'; g.beginPath(); g.arc(s[0], s[1], 7, 0, 7); g.fill(); g.stroke();
       g.fillStyle = `rgb(${c.map(v => Math.round(v * 0.55))})`; g.beginPath(); g.arc(e[0], e[1], 7, 0, 7); g.fill(); }
+    if (v === 'top') for (const [p, z] of reachPts) if (z === 'C' || z === 'D') { const a = proj(p); g.lineWidth = 2; g.strokeStyle = '#b42318'; g.beginPath(); g.moveTo(a[0] - 5, a[1] - 5); g.lineTo(a[0] + 5, a[1] + 5); g.moveTo(a[0] + 5, a[1] - 5); g.lineTo(a[0] - 5, a[1] + 5); g.stroke(); }
     // escala 10 cm
     const z = proj([0, 0, 0]), z1 = proj([right.x * 0.1, 0, right.z * 0.1]); let px = Math.abs(v === 'top' ? z1[0] - z[0] : proj([fwd.x * 0.1, 0, fwd.z * 0.1])[0] - z[0]);
     g.restore(); g.strokeStyle = '#3a4756'; g.lineWidth = 2; const sx = x0 + W - 20 - px, sy = y0 + Hh - 18; g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx + px, sy); g.moveTo(sx, sy - 5); g.lineTo(sx, sy + 5); g.moveTo(sx + px, sy - 5); g.lineTo(sx + px, sy + 5); g.stroke();
@@ -3520,8 +3589,16 @@ RP.paths = function (opt) {
   const tot = dist.L + dist.R || 1; const sh = Math.round(100 * dist.R / tot);
   g.font = '20px Helvetica, Arial'; g.fillStyle = '#3a4756'; g.fillText((en ? 'Share of hand travel: left ' : 'Reparto del recorrido: izquierda ') + (100 - sh) + ' % · ' + (en ? 'right ' : 'derecha ') + sh + ' %', x, y);
   g.fillText(en ? 'Light = start of the session, dark = end.  Ring = first point, dot = last point.  Index knuckle; walking removed.' : 'Claro = inicio de la sesión, oscuro = final.  Aro = primer punto, punto = último.  Nudillo del índice; sin caminata.', PAD, out.height - 18);
+  { const n = Object.values(ZC).reduce((a, b) => a + b, 0) || 1, nv = Object.values(VC).reduce((a, b) => a + b, 0) || 1; const yb = HEAD + Hh + 40;
+    g.font = 'bold 20px Helvetica, Arial'; g.fillStyle = '#1b2633'; g.fillText((en ? 'Golden Zone: where each reach ended (' : 'Golden Zone: dónde terminó cada alcance (') + n + ')', PAD, yb);
+    let bx = PAD; const bw = W - 10; for (const z of ['AA', 'A', 'B', 'C', 'D']) { const w = bw * ZC[z] / n; g.fillStyle = ZCOL[z]; g.fillRect(bx, yb + 12, w, 30); if (w > 50) { g.fillStyle = '#10202e'; g.font = 'bold 16px Helvetica, Arial'; g.fillText(z + ' ' + Math.round(100 * ZC[z] / n) + '%', bx + 6, yb + 33); } bx += w; }
+    const aa = Math.round(100 * (ZC.AA + ZC.A) / n); g.font = '17px Helvetica, Arial'; g.fillStyle = '#3a4756'; g.fillText((en ? 'KPI in AA-A zone: ' : 'KPI en zona AA-A: ') + aa + ' %   ·   ' + (en ? 'X = reach ended in C/D' : 'X = alcance terminó en C/D'), PAD, yb + 64);
+    const x2 = PAD * 2 + W; g.font = 'bold 20px Helvetica, Arial'; g.fillStyle = '#1b2633'; g.fillText(en ? 'Strike Zone: hand height at end of reach' : 'Strike Zone: altura de la mano al terminar el alcance', x2, yb);
+    bx = x2; const VCOL = { pt: '#1f9d55', zn: '#f2c94c', hi: '#e5484d', lo: '#e58a8d' }, VL = { pt: en ? 'Strike point' : 'Strike point', zn: en ? 'Zone' : 'Zona', hi: en ? 'Above shoulder' : 'Arriba hombro', lo: en ? 'Below waist' : 'Abajo cintura' };
+    for (const z of ['pt', 'zn', 'hi', 'lo']) { const w = bw * VC[z] / nv; g.fillStyle = VCOL[z]; g.fillRect(bx, yb + 12, w, 30); if (w > 50) { g.fillStyle = '#10202e'; g.font = 'bold 16px Helvetica, Arial'; const tx = (w > 150 ? VL[z] + ' ' : '') + Math.round(100 * VC[z] / nv) + '%'; g.fillText(tx, bx + 6, yb + 33); } bx += w; }
+    g.font = '17px Helvetica, Arial'; g.fillStyle = '#3a4756'; g.fillText((en ? 'Heights from this operator: stature ≈ ' : 'Alturas de este operador: estatura ≈ ') + Math.round(Hs * 100) + ' cm' + (stand ? '' : (en ? ' (seated: standard)' : ' (sentado: estándar)')), x2, yb + 64); }
   recol.forEach(([m, hx]) => m.color.setHex(hx)); R3.setPixelRatio(old.pr); sc.fog = old.fog; size(); update();
-  return { url: out.toDataURL('image/png'), dist, w: out.width, h: out.height, spans };
+  return { url: out.toDataURL('image/png'), dist, w: out.width, h: out.height, spans, zones: ZC, strike: VC, aaA: Math.round(100 * (ZC.AA + ZC.A) / (Object.values(ZC).reduce((a, b) => a + b, 0) || 1)), heights: { shoulder: yShoulder, elbow: yElbow, waist: yWaist, stature: Hs } };
 };
 
 // tarjeta de trayectorias en la pantalla de análisis
