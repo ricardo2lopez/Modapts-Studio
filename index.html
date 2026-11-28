@@ -65,7 +65,7 @@ button.glcode:hover,button.glcode.on{background:var(--panel2)}button.glcode.on{o
 <body>
 <div class="wrap">
 <header>
-  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.8.5</span></h1><div class="sub" data-t="sub"></div></div>
+  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.8.6</span></h1><div class="sub" data-t="sub"></div></div>
   <div class="row"><button class="sm" id="langBtn" title="Idioma / Language">EN</button><button class="sm" id="theme" data-t="theme"></button></div>
 </header>
 
@@ -741,6 +741,7 @@ async function makePDF(sess,lang){
     doc.autoTable({startY:y+5,margin:{left:M,right:M},theme:'grid',styles:{fontSize:8.5,cellPadding:1.5,lineColor:[210,216,222]},headStyles:{fillColor:[20,32,43],textColor:255,fontSize:8.5},
       head:[[es?'Mano':'Hand',es?'Trabajo (movimientos con código)':'Work (coded moves)',es?'Quieta sosteniendo':'Still, holding',es?'Quieta vacía':'Still, empty',es?'Sin datos':'No data']],
       body:[[es?'Izquierda':'Left',sec(U.L.work),sec(U.L.hold),sec(U.L.idle),sec(U.L.lost)],[es?'Derecha':'Right',sec(U.R.work),sec(U.R.hold),sec(U.R.idle),sec(U.R.lost)],
+        ...(r.tool&&r.tool.n?[[{content:(es?'Herramienta en uso (manos una sobre otra): ':'Tool in use (one hand above the other): ')+r.tool.n+(es?' tramos, ':' segments, ')+(+r.tool.t).toFixed(1)+' s',colSpan:5,styles:{fontStyle:'bold'}}]]:[]),
         ...(r.activity?[[{content:(es?'Las dos quietas y vacías a la vez: ':'Both still and empty at the same time: ')+(+r.activity.bothWait).toFixed(1)+(es?' s. Mismas cifras que las barras del desglose.':' s. Same figures as the breakdown bars.'),colSpan:5,styles:{fontStyle:'italic'}}]]:[])]});
     y=doc.lastAutoTable.finalY+6;}
   // v1.4: en lugar del detalle movimiento por movimiento (queda en el Excel), Pareto en dos niveles y uso de las manos
@@ -1600,7 +1601,7 @@ window.__pdf={multiPDF,wastePages,vaOf,comparePDF,idleOf,makePDF,describe,stdCha
     // si la referencia quedó lejos de donde arranca la grabación (se tomó junto al panel, o el visor recentró el espacio), se toma de nuevo al arrancar
     if (opts && opts.ref && opts.autoRef !== false) { const f0 = frames.filter(f => f.head && f.head.p && f.t - frames[0].t < 1.0).map(f => neckOf(f.head));
       if (f0.length > 10) { const md = a => { const b = a.slice().sort((x, y) => x - y); return b[b.length >> 1]; }, d = Math.hypot(md(f0.map(n => n[0])) - opts.ref.p[0], md(f0.map(n => n[2])) - opts.ref.p[2]);
-        if (d > 0.30) opts = Object.assign({}, opts, { ref: null, refMoved: +d.toFixed(2) }); } } const ar = apRangeOf(frames), E = Engine(Object.assign({ apRange: ar }, opts || {})); frames.forEach(f => E.push(f)); const r = E.finish(); mlApply(r, opts); r.apRange = ar; if (opts && opts.refMoved) r.refMoved = opts.refMoved; if (r.ergo) r.ergo.lost = { L: +G.g.lost.L.toFixed(1), R: +G.g.lost.R.toFixed(1) }; workPosture(frames, r, opts); handUse(frames, r); return r; }
+        if (d > 0.30) opts = Object.assign({}, opts, { ref: null, refMoved: +d.toFixed(2) }); } } const ar = apRangeOf(frames), E = Engine(Object.assign({ apRange: ar }, opts || {})); frames.forEach(f => E.push(f)); const r = E.finish(); mlApply(r, opts); if (!(opts && opts.tool === false)) toolApply(r, frames); r.apRange = ar; if (opts && opts.refMoved) r.refMoved = opts.refMoved; if (r.ergo) r.ergo.lost = { L: +G.g.lost.L.toFixed(1), R: +G.g.lost.R.toFixed(1) }; workPosture(frames, r, opts); handUse(frames, r); return r; }
 
   /* ===== v1.5: machine learning para las terminaciones (P0 / P2 / P5 / ruido) =====
      El visor no ve la pieza: decide la terminación por cómo se mueve la mano. Un árbol de decisión pequeño
@@ -1695,6 +1696,35 @@ window.__pdf={multiPDF,wastePages,vaOf,comparePDF,idleOf,makePDF,describe,stdCha
     }
     return out.sort((a, b) => a.t0 - b.t0);
   }
+
+  /* v1.8.6: herramienta (desarmador) = las dos muñecas una sobre otra durante el tramo (separación vertical > 8 cm).
+     Probado con 85 tramos revisados en video: detecta 21 de 23 tramos de herramienta y marca mal 1 de 62. El modelo de tramos
+     (5 tipos, 28 % de acierto) ya no se aplica: con los datos del visor no separa herramienta / apretar / girar y empeoraba el tiempo. */
+  const TOOL_DV = 0.08;
+  function wristOf(h) { if (!h) return null; if (h.wrist) return h.wrist; if (h.j && h.j.length >= 3) return [h.j[0], h.j[1], h.j[2]]; return null; }
+  function toolApply(r, frames) {
+    if (!r || !r.elements || !frames || !frames.length) return r;
+    const segs = mlSegments(r.elements), tl = [];
+    for (const g of segs) {
+      const dv = [];
+      for (const f of frames) { if (f.t < g.t0 || f.t > g.t1) continue; const a = wristOf(f.L), b = wristOf(f.R); if (a && b) dv.push(Math.abs(a[1] - b[1])); }
+      if (dv.length < 5) continue; dv.sort((x, y) => x - y); const md = dv[dv.length >> 1];
+      if (md > TOOL_DV) tl.push(Object.assign({}, g, { dv: +md.toFixed(3) }));
+    }
+    if (!tl.length) { r.tool = { n: 0, t: 0 }; return r; }
+    let E = r.elements.slice();
+    for (const g of tl) {
+      const inS = e => e.hand === g.h && e.t0 >= g.t0 - 0.05 && e.t1 <= g.t1 + 0.05, sh = E.filter(e => inS(e) && SEG_SHORT.test(e.code || ''));
+      if (!sh.length) continue;
+      const dur = g.t1 - g.t0, k = Math.max(1, Math.round(dur / 0.8)), onlyFing = sh.every(e => !/^M2/.test(e.code)), code = (onlyFing ? 'U1' : 'U2') + (k > 1 ? 'x' + k : '');
+      const last = sh[sh.length - 1], ne = { id: 'tool' + g.h + g.t0, hand: g.h, t0: sh[0].t0, t1: last.t1, dist: 0, move: '', term: code, code, mods: modsOf(code), p1: last.p1, seg: 'U', tool: true, dv: g.dv };
+      E = E.filter(e => !sh.includes(e)); E.push(ne);
+    }
+    E.sort((a, b) => a.t0 - b.t0);
+    const s = summarize(E, Object.assign({}, r, { elements: undefined })); Object.assign(r, s);
+    r.tool = { n: tl.length, t: +tl.reduce((a, g) => a + (g.t1 - g.t0), 0).toFixed(1) };
+    return r;
+  }
   // aplica el modelo de tramos: herramienta (U) o girar (C) reemplazan los movimientos cortos del tramo por un código repetido según lo que duró
   // (las vueltas son aproximadas: el visor no las cuenta); "solo se acomodó" quita los apretones (X4) del tramo; "apretó" deja lo de las reglas
   function mlSegApply(els, segs, model, opt) {
@@ -1755,7 +1785,7 @@ window.__pdf={multiPDF,wastePages,vaOf,comparePDF,idleOf,makePDF,describe,stdCha
   ML.model = ML_BASE.model;
   function mlApply(r, opts) {
     const m = opts && opts.model !== undefined ? opts.model : ML.model; if (!m || !r || !r.elements) return r;
-    const segs = m.seg && m.seg.tree ? mlSegments(r.elements) : [];
+    const segs = []; // v1.8.6: el modelo de 5 tipos de tramo ya no se aplica (ver toolApply)
     const R = mlRefine(r.elements.map(e => Object.assign({}, e)), m), G = mlSegApply(R.els, segs, m.seg);
     const s = summarize(G.els, Object.assign({}, r, { elements: undefined }));
     Object.assign(r, s); r.ml = Object.assign({ v: m.v || 1, n: m.n }, R.st, m.seg ? { seg: G.st } : {}); return r;
@@ -1803,7 +1833,7 @@ window.__pdf={multiPDF,wastePages,vaOf,comparePDF,idleOf,makePDF,describe,stdCha
     const tot = l1.reduce((a, x) => a + x.s, 0), mt = hs.L.mods + hs.R.mods || 1;
     return { T: r2(T), S: r2(S), tot: r2(tot), ideal: r2(Math.max(0, T - tot)), l1, use: { L: Math.round(hs.L.mods / mt * 100), R: Math.round(hs.R.mods / mt * 100) }, ratio: { L: r2(hs.L.ratio), R: r2(hs.R.ratio) }, weak, cross: crN };
   }
-  const API = { mlSegments, mlSegApply, ML_SEG_FEAT, ML_SEG_CLS, wasteOf, Engine, summarize, synth, analyze, modsOf, moveClass, neckOf, MOD_SEC, DEF, cleanFrames, _dropEmptyCloses: dropEmptyCloses, mlFeatures, mlTrain, mlPredict, mlCV, mlRefine, mlApply, ML, ML_FEAT, ML_CLS };
+  const API = { toolApply, TOOL_DV, mlSegments, mlSegApply, ML_SEG_FEAT, ML_SEG_CLS, wasteOf, Engine, summarize, synth, analyze, modsOf, moveClass, neckOf, MOD_SEC, DEF, cleanFrames, _dropEmptyCloses: dropEmptyCloses, mlFeatures, mlTrain, mlPredict, mlCV, mlRefine, mlApply, ML, ML_FEAT, ML_CLS };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.MODAPTS = API;
 })(typeof self !== 'undefined' ? self : this);
 </script>
