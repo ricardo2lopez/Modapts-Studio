@@ -65,7 +65,7 @@ button.glcode:hover,button.glcode.on{background:var(--panel2)}button.glcode.on{o
 <body>
 <div class="wrap">
 <header>
-  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.8.4</span></h1><div class="sub" data-t="sub"></div></div>
+  <div><h1><b>MODAPTS</b> Studio <span id="appVer" style="font-size:14px;font-weight:600;opacity:.7;vertical-align:middle">v1.8.5</span></h1><div class="sub" data-t="sub"></div></div>
   <div class="row"><button class="sm" id="langBtn" title="Idioma / Language">EN</button><button class="sm" id="theme" data-t="theme"></button></div>
 </header>
 
@@ -745,6 +745,11 @@ async function makePDF(sess,lang){
     y=doc.lastAutoTable.finalY+6;}
   // v1.4: en lugar del detalle movimiento por movimiento (queda en el Excel), Pareto en dos niveles y uso de las manos
   const C=conclusions(r,lang,sess);y=conclPages(doc,r,lang,sess,C,PW,M,CW,t);
+  // v1.8.5: espagueti — trayectoria de las manos de toda la sesión (se había perdido del PDF en v1.6)
+  {let pth=null;if(sess.raw&&sess.raw.length>1&&window.__replay&&window.__replay.paths){try{pth=window.__replay.paths({lang});}catch(e){}}
+   if(pth&&pth.url){doc.addPage();let yy=16;doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(t.path,M,yy);
+     doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(93,107,120);doc.text(lang==='es'?'Cada mano en su color, clara al inicio y oscura al final. Vista superior y lateral, misma escala.':'Each hand in its color, light at the start and dark at the end. Top and side view, same scale.',M,yy+5);doc.setTextColor(20,32,43);
+     const ph=Math.min(240,CW*(pth.h||710)/(pth.w||1658)),pw=ph*(pth.w||1658)/(pth.h||710);doc.addImage(pth.url,'PNG',M+(CW-pw)/2,yy+9,pw,ph);}}
   // método de cálculo en 3 renglones (la tabla completa sale en la pantalla) y el modelo que decidió las terminaciones
   const mlLines=(()=>{const es=lang==='es',ml=r.ml;return [es?'Método: MODs de cada elemento = suma de los números del código (M4G1 = 4 + 1 = 5). Actual MODs = MODs × 0.129 s; actual cronómetro = del INICIO al TERMINAR, medido por el visor.':'Method: MODs per element = sum of the code numbers (M4G1 = 4 + 1 = 5). Actual MODs = MODs × 0.129 s; actual stopwatch = from START to FINISH, measured by the headset.',
       es?'Las dos manos a la vez: solo cuenta la mayor (*); si las dos son de alto control (G3, P2, P5) cuentan las dos y la mayor baja a M2 (**). Norma MODAPTS, IMA 2017.':'Both hands at once: only the larger counts (*); if both are high control (G3, P2, P5) both count and the larger drops to M2 (**). MODAPTS standard, IMA 2017.',
